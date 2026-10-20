@@ -1,0 +1,730 @@
+/*
+  CineBook theme — "paper and house lights" (docs/PRD.md §8).
+  Stock for transactions, house for seats. Rules instead of boxes, no shadows,
+  4 px on buttons and nothing larger, tabular figures for money.
+*/
+
+.root {
+    -fx-font-family: "Archivo";
+    -fx-font-size: 14px;
+    -fx-background-color: #E9E7DF;
+    -fx-text-fill: #16181C;
+    -fx-focus-color: #14615C;
+    -fx-faint-focus-color: transparent;
+}
+
+.header {
+    -fx-padding: 22 40 18 40;
+    -fx-border-color: #16181C;
+    -fx-border-width: 0 0 1 0;
+}
+
+.wordmark {
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+}
+
+.display {
+    -fx-font-size: 40px;
+    -fx-font-weight: 600;
+}
+
+.section-title {
+    -fx-font-size: 30px;
+    -fx-font-weight: 600;
+}
+
+.muted {
+    -fx-text-fill: #8C8B84;
+}
+
+.field-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #8C8B84;
+}
+
+.text-field {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent transparent #8C8B84 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 7 0 7 0;
+    -fx-text-fill: #16181C;
+    -fx-prompt-text-fill: #8C8B84;
+    -fx-highlight-fill: #14615C;
+    -fx-highlight-text-fill: #E9E7DF;
+}
+
+.text-field:focused {
+    -fx-border-color: transparent transparent #14615C transparent;
+}
+
+.button {
+    -fx-background-color: #D8412F;
+    -fx-background-radius: 4;
+    -fx-text-fill: #E9E7DF;
+    -fx-font-weight: 600;
+    -fx-padding: 11 22 11 22;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #BF3726;
+}
+
+.button:disabled {
+    -fx-opacity: 0.55;
+}
+
+.error {
+    -fx-text-fill: #D8412F;
+    -fx-font-size: 13px;
+}
+
+.rail {
+    -fx-pref-width: 208;
+    -fx-min-width: 208;
+    -fx-max-width: 208;
+    -fx-padding: 24 0 20 0;
+    -fx-border-color: transparent #16181C transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+
+.rail-brand {
+    -fx-padding: 0 20 26 20;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-text-fill: #16181C;
+    -fx-font-weight: 400;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 10 20 10 20;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 0 2;
+}
+
+.nav-button:hover {
+    -fx-text-fill: #D8412F;
+}
+
+.nav-button.selected {
+    -fx-border-color: transparent transparent transparent #D8412F;
+    -fx-font-weight: 600;
+}
+
+.rail-user {
+    -fx-padding: 0 20 0 20;
+}
+
+.link-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #14615C;
+    -fx-font-weight: 400;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+    -fx-underline: true;
+}
+
+.money {
+    -fx-font-weight: 600;
+}
+
+.row-rule {
+    -fx-border-color: #D9D5C9;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* The date strip: one selectable ticket stub per day above the day's list. */
+.button.date-panel {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent transparent #D9D5C9 transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-padding: 10 12 10 12;
+    -fx-alignment: TOP_LEFT;
+    -fx-cursor: hand;
+}
+
+.button.date-panel:hover {
+    -fx-background-color: #E0DDD3;
+}
+
+.button.date-panel.today {
+    -fx-border-color: transparent transparent #D8412F transparent;
+}
+
+/* Selected: a second layer of stock and a riso rule, not an ink block — the
+   dark fill fought the paper theme and read heavier than the day itself. */
+.button.date-panel.selected {
+    -fx-background-color: #D9D5C9;
+    -fx-border-color: transparent transparent #D8412F transparent;
+}
+
+.date-weekday {
+    -fx-font-size: 11px;
+    -fx-text-fill: #8C8B84;
+}
+
+.date-day {
+    -fx-font-size: 26px;
+    -fx-font-weight: 600;
+}
+
+.date-month {
+    -fx-font-size: 11px;
+    -fx-text-fill: #8C8B84;
+}
+
+.date-count {
+    -fx-font-size: 11px;
+    -fx-text-fill: #8C8B84;
+}
+
+.date-today {
+    -fx-font-size: 9px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #D8412F;
+    -fx-border-color: #D8412F;
+    -fx-border-width: 1;
+    -fx-padding: 1 4 1 4;
+}
+
+.button.date-panel.today .date-weekday {
+    -fx-text-fill: #D8412F;
+}
+
+.button.date-panel.selected .date-weekday {
+    -fx-font-weight: 600;
+    -fx-text-fill: #D8412F;
+}
+
+.button.date-panel.selected .date-day {
+    -fx-text-fill: #D8412F;
+}
+
+.button.date-panel.selected .date-month,
+.button.date-panel.selected .date-count {
+    -fx-text-fill: #16181C;
+}
+
+.button.date-panel.selected .date-today {
+    -fx-background-color: #D8412F;
+    -fx-text-fill: #E9E7DF;
+    -fx-border-color: transparent;
+}
+
+.body {
+    -fx-padding: 40 40 40 40;
+}
+
+/* Content area: the paper shows through, only the thumb is drawn. */
+.content-scroll {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.content-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.content-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.content-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: #8C8B84;
+    -fx-background-radius: 0;
+}
+
+.content-scroll .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+}
+
+.content-scroll .scroll-bar:vertical .increment-button,
+.content-scroll .scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* A schedule row is a button: the whole line is the click target for the seat map. */
+.button.schedule-row {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent transparent #D9D5C9 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 9 0 9 0;
+    -fx-alignment: CENTER_LEFT;
+    -fx-cursor: hand;
+}
+
+.button.schedule-row:hover {
+    -fx-background-color: #DFDCD2;
+}
+
+/*
+  The seat page (docs/PRD.md §4): warm ivory stock, no panel and no box. One
+  turquoise screen, then a band per class. Cream seats on a tan hairline; state
+  is the only strong colour — faded with an × for sold, green for a pick.
+*/
+.seat-page {
+    -fx-background-color: #F9F5E9;
+}
+
+.seat-scroll,
+.seat-scroll > .viewport {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.seat-paper {
+    -fx-background-color: transparent;
+}
+
+.screen-shape {
+    -fx-fill: #18C3D6;
+}
+
+.screen-caption {
+    -fx-font-size: 9px;
+    -fx-text-fill: #2B2A26;
+}
+
+.seat-section {
+    -fx-font-size: 10px;
+    -fx-text-fill: #161513;
+}
+
+.seat-rule {
+    -fx-background-color: #E6E1D2;
+}
+
+.seat-row-letter {
+    -fx-font-size: 11px;
+    -fx-text-fill: #3B372E;
+    -fx-alignment: CENTER;
+}
+
+.seat {
+    -fx-background-color: #ECE3CE;
+    -fx-background-radius: 4;
+    -fx-border-color: #BFB49F;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-text-fill: #46402F;
+    -fx-font-size: 8px;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.seat:hover {
+    -fx-border-color: #8E8269;
+}
+
+.seat-premium {
+    -fx-border-color: #B3A78F;
+}
+
+/* A pick is a preview only: nothing is held until the transaction exists. */
+.seat-picked {
+    -fx-background-color: #0DAB77;
+    -fx-border-color: #0DAB77;
+    -fx-text-fill: #FFFFFF;
+}
+
+.seat-sold {
+    -fx-background-color: #F1EBDD;
+    -fx-border-color: #DCD5C4;
+    -fx-text-fill: #C9C2B2;
+    -fx-font-size: 15px;
+}
+
+.seat-sold:hover {
+    -fx-border-color: #C9C2B2;
+}
+
+/* Recliners are drawn, not filled: the armchair carries the class. */
+.seat-chair {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.chair-body {
+    -fx-fill: #ECE3CE;
+    -fx-stroke: #BFB49F;
+    -fx-stroke-width: 1;
+}
+
+.chair-line {
+    -fx-stroke: #D5CBB4;
+    -fx-stroke-width: 1;
+}
+
+.chair-number {
+    -fx-font-size: 8px;
+    -fx-text-fill: #46402F;
+}
+
+.seat-chair:hover .chair-body {
+    -fx-stroke: #8E8269;
+}
+
+.seat-sold .chair-body {
+    -fx-fill: #F1EBDD;
+    -fx-stroke: #DCD5C4;
+}
+
+.seat-sold .chair-line {
+    -fx-stroke: #E4DDCC;
+}
+
+.seat-cross {
+    -fx-font-size: 20px;
+    -fx-text-fill: #C1B9A7;
+}
+
+.seat-chair.seat-picked .chair-body {
+    -fx-fill: #0DAB77;
+    -fx-stroke: #0A8A60;
+}
+
+.seat-chair.seat-picked .chair-line {
+    -fx-stroke: #7FD9BA;
+}
+
+/* Held is darker than picked: the transaction has committed and the seats are
+   locked, so they must stop looking like a preview that can be changed. */
+.seat-held {
+    -fx-background-color: #0A8A60;
+    -fx-border-color: #0A8A60;
+    -fx-text-fill: #FFFFFF;
+    -fx-cursor: default;
+}
+
+.seat-held:hover {
+    -fx-border-color: #0A8A60;
+}
+
+.seat-chair.seat-held .chair-body {
+    -fx-fill: #0A8A60;
+    -fx-stroke: #086B4B;
+}
+
+.seat-chair.seat-held .chair-line {
+    -fx-stroke: #6BC7A6;
+}
+
+.seat-held .chair-number {
+    -fx-text-fill: #FFFFFF;
+}
+
+.seat-status {
+    -fx-text-fill: #8A8477;
+    -fx-font-size: 12px;
+    -fx-min-height: 18;
+    -fx-alignment: CENTER;
+}
+
+/* The booking footer from the reference: picks, their class and the bill in one
+   line, pinned under the seating so the total stays in view. */
+.booking-bar {
+    -fx-background-color: #F9F5E9;
+    -fx-border-color: #E6E1D2 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-min-height: 56;
+}
+
+.seat-tally,
+.seat-class {
+    -fx-font-size: 12px;
+    -fx-text-fill: #1F1F1F;
+}
+
+.seat-total {
+    -fx-font-size: 13px;
+    -fx-text-fill: #1F1F1F;
+}
+
+.button.confirm-seats {
+    -fx-background-color: #8F7F66;
+    -fx-background-radius: 4;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 12px;
+    -fx-font-weight: 400;
+    -fx-padding: 9 18 9 18;
+}
+
+.button.confirm-seats:hover {
+    -fx-background-color: #7A6C56;
+}
+
+.button.confirm-seats:disabled {
+    -fx-opacity: 0.55;
+}
+
+/*
+  Checkout side panel (docs/PRD.md §5). It sits on a slightly darker sheet than
+  the seat page, separated by one rule, so the room stays visible while the sale
+  is assembled. Controls are chips, not a form catalogue.
+*/
+.checkout-scroll,
+.checkout-scroll > .viewport {
+    -fx-background-color: #F4EFE2;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.checkout-scroll {
+    -fx-border-color: transparent transparent transparent #E0D9C8;
+    -fx-border-width: 0 0 0 1;
+}
+
+.checkout-panel {
+    -fx-background-color: #F4EFE2;
+}
+
+.checkout-eyebrow {
+    -fx-font-size: 9px;
+    -fx-text-fill: #8A8477;
+}
+
+.checkout-ref {
+    -fx-font-size: 20px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1F1F1F;
+}
+
+.checkout-where {
+    -fx-font-size: 11px;
+    -fx-text-fill: #6E6A5F;
+}
+
+.checkout-label {
+    -fx-font-size: 9px;
+    -fx-text-fill: #8A8477;
+    -fx-padding: 4 0 0 0;
+}
+
+.checkout-value {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1F1F1F;
+}
+
+.checkout-line {
+    -fx-font-size: 11px;
+    -fx-text-fill: #3B372E;
+}
+
+.checkout-money {
+    -fx-font-size: 11px;
+    -fx-text-fill: #1F1F1F;
+}
+
+.checkout-total {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1F1F1F;
+}
+
+/*
+  The rail is a scroll pane with a footer that does not scroll: the seat map is
+  never hidden, and neither is the amount or the button that takes the money.
+*/
+.checkout-rail {
+    -fx-background-color: #F4EFE2;
+}
+
+.checkout-footer {
+    -fx-background-color: #FBF7EC;
+    -fx-border-color: #E0D9C8 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.checkout-total.checkout-footer-total {
+    -fx-font-size: 18px;
+}
+
+.checkout-count-badge {
+    -fx-font-size: 9px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #F9F5E9;
+    -fx-background-color: #14615C;
+    -fx-background-radius: 8;
+    -fx-padding: 0 6 1 6;
+}
+
+.checkout-search {
+    -fx-font-size: 11px;
+}
+
+.checkout-small-action {
+    -fx-font-size: 11px;
+}
+
+.customer-result {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent transparent #E0D9C8 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 6 2 6 2;
+    -fx-font-size: 11px;
+    -fx-font-weight: 400;
+    -fx-text-fill: #1F1F1F;
+    -fx-alignment: CENTER_LEFT;
+    -fx-cursor: hand;
+}
+
+.customer-result:hover {
+    -fx-background-color: #EDE7D9;
+}
+
+/*
+  A food tile is a card, not a chip: the quantity lives in booking_concession as a
+  number (1-20), so the tile carries a stepper rather than a 0/1 toggle. The card
+  turns teal once the line is on the order, which is also what makes the cream
+  badge and the cream name readable.
+*/
+.concession-card {
+    -fx-background-color: #ECE3CE;
+    -fx-background-radius: 4;
+    -fx-border-color: #BFB49F;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-padding: 6 5 5 6;
+}
+
+.concession-card.selected {
+    -fx-background-color: #14615C;
+    -fx-border-color: #14615C;
+}
+
+.checkout-food-name {
+    -fx-font-size: 10px;
+    -fx-text-fill: #1F1F1F;
+}
+
+.checkout-food-price {
+    -fx-font-size: 9px;
+    -fx-text-fill: #7A7568;
+}
+
+.concession-card.selected .checkout-food-name,
+.concession-card.selected .checkout-food-price {
+    -fx-text-fill: #F9F5E9;
+}
+
+.concession-stepper {
+    -fx-padding: 2 0 0 0;
+}
+
+.stepper-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 3;
+    -fx-border-color: #A2957A;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-padding: 0;
+    -fx-font-size: 13px;
+    -fx-text-fill: #1F1F1F;
+    -fx-cursor: hand;
+    -fx-min-width: 21;
+    -fx-pref-width: 21;
+    -fx-max-width: 21;
+    -fx-min-height: 19;
+    -fx-pref-height: 19;
+    -fx-max-height: 19;
+}
+
+.stepper-button:hover {
+    -fx-border-color: #6E6450;
+    -fx-background-color: rgba(255, 255, 255, 0.45);
+}
+
+.stepper-button:disabled {
+    -fx-opacity: 0.3;
+}
+
+.concession-card.selected .stepper-button {
+    -fx-border-color: #5C8F8A;
+    -fx-text-fill: #F9F5E9;
+}
+
+.concession-card.selected .stepper-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+}
+
+.stepper-badge {
+    -fx-font-size: 10px;
+    -fx-text-fill: #8A8477;
+    -fx-alignment: CENTER;
+    -fx-min-width: 18;
+    -fx-pref-width: 18;
+    -fx-max-width: 18;
+    -fx-min-height: 18;
+    -fx-pref-height: 18;
+    -fx-max-height: 18;
+}
+
+.stepper-badge.filled {
+    -fx-background-color: #F9F5E9;
+    -fx-background-radius: 9;
+    -fx-text-fill: #14615C;
+    -fx-font-weight: 600;
+}
+
+.pay-chip {
+    -fx-background-color: transparent;
+    -fx-background-radius: 3;
+    -fx-border-color: #C9C0AC;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-padding: 6 12 6 12;
+    -fx-font-size: 10px;
+    -fx-text-fill: #3B372E;
+    -fx-cursor: hand;
+}
+
+.pay-chip.selected {
+    -fx-background-color: #1F1F1F;
+    -fx-border-color: #1F1F1F;
+    -fx-text-fill: #F9F5E9;
+}
+
+.button.checkout-pay {
+    -fx-background-color: #D8412F;
+    -fx-background-radius: 4;
+    -fx-text-fill: #F9F5E9;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-padding: 10 14 10 14;
+}
+
+.button.checkout-pay:hover {
+    -fx-background-color: #BF3726;
+}
+
+.receipt-preview,
+.receipt-preview .content {
+    -fx-background-color: #FBF7EC;
+}
+
+.receipt-preview {
+    -fx-font-family: "Monospaced";
+    -fx-font-size: 9.5px;
+    -fx-text-fill: #1F1F1F;
+    -fx-border-color: #E0D9C8;
+    -fx-border-width: 1;
+}
+
+.checkout-error {
+    -fx-text-fill: #B23B2A;
+}
