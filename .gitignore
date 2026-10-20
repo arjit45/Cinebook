@@ -1,0 +1,43 @@
+# Build output
+target/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Real credentials - the example file is committed instead
+src/main/resources/app.properties
+app.properties
+.env
+*.env
+
+# Generated, not data
+receipts/
+backup/
+*.log
+hs_err_pid*.log
+replay_pid*.log
+
+# IDE & workspace
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.vscode/
+.freebuff/
+
+# OS system files
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Exam prep & report notes (kept local)
+docs/REPORT.md
+docs/VIVA.md
+
+# ER diagrams (to be drawn in ERDPlus, not generated)
+docs/ER.drawio
+docs/ER.svg
+docs/ER.png
+docs/ERDPlus.md

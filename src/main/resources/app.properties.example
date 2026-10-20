@@ -1,0 +1,6 @@
+# Copy to app.properties and fill in the password you chose in db/05_users.sql.
+# app.properties is gitignored; this file is committed on purpose so the
+# submission runs on someone else's machine after one edit.
+jdbc.url=jdbc:mysql://localhost:3306/cinebook?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
+jdbc.user=cinebook_app
+jdbc.password=

@@ -1,0 +1,295 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1740" height="1400" viewBox="0 0 1740 1400">
+<rect width="1740" height="1400" fill="white"/>
+<text x="30" y="46" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#16181C">CineBook — domain model</text><text x="1710" y="46" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#6B6A63" text-anchor="end">diagram 1 of 2 · entities, inheritance, associations</text><path d="M30,60 H1710" stroke="#16181C" stroke-width="1"/>
+
+<defs>
+  <marker id="tri" viewBox="0 0 14 14" refX="1" refY="7" markerWidth="14"
+          markerHeight="14" orient="auto">
+    <path d="M13,1 L1,7 L13,13 z" fill="white" stroke="#16181C" stroke-width="1.2"/>
+  </marker>
+  <marker id="crow" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14"
+          markerHeight="14" orient="auto">
+    <path d="M12,7 L1,1 M12,7 L1,7 M12,7 L1,13" fill="none" stroke="#3A3C42"
+          stroke-width="1.1"/>
+  </marker>
+  <marker id="open" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14"
+          markerHeight="14" orient="auto">
+    <path d="M1,1 L13,7 L1,13" fill="none" stroke="#3A3C42" stroke-width="1.1"/>
+  </marker>
+</defs>
+
+<path d="M370,150 L330,150" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#crow)"/>
+<text x="342" y="142" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="end">1</text>
+<text x="358" y="142" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="start">*</text>
+<path d="M370,230 L345,230 L345,330 L330,330" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#crow)"/>
+<text x="338" y="322" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="end">1</text>
+<text x="352" y="322" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="start">*</text>
+<path d="M710,150 L670,150" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#crow)"/>
+<text x="676" y="142" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="start">1</text>
+<text x="702" y="142" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="end">*</text>
+<path d="M710,465 L330,465" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#crow)"/>
+<text x="338" y="457" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="end">1</text>
+<text x="702" y="457" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="end">*</text>
+<path d="M710,400 L684,400 L684,750 L330,750" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#crow)"/>
+<text x="702" y="394" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="end">*</text>
+<text x="336" y="744" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="start">soldBy  1</text>
+<path d="M710,430 L700,430 L700,785 L330,785" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#crow)"/>
+<text x="702" y="424" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="end">*</text>
+<text x="336" y="779" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="start">cancelledBy  0..1</text>
+<path d="M865,483 L865,570" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#crow)"/>
+<text x="873" y="499" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="start">1</text>
+<text x="873" y="562" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="start">1</text>
+<path d="M1020,130 L1120,130" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#crow)"/>
+<text x="1028" y="122" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="end">1</text>
+<text x="1114" y="122" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="end">*</text>
+<path d="M760,483 L760,640 L670,640" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#crow)"/>
+<path d="M1020,460 L1060,460 L1060,1235 L1020,1235" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#crow)"/>
+<text x="1026" y="454" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="start">1</text>
+<text x="1034" y="1229" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="end">*</text>
+<path d="M710,1235 L670,1235" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#crow)"/>
+<text x="676" y="1229" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="start">1</text>
+<text x="704" y="1229" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="end">*</text>
+<path d="M1020,1275 L1120,1275" fill="none" stroke="#3A3C42" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#open)"/>
+<text x="1070" y="1266" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63">maps to</text>
+<path d="M1265.0,228 L1265.0,260" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#crow)"/>
+<text x="1257" y="244" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="end">*</text>
+<text x="1273" y="254" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="start">1</text>
+<path d="M330,350 L520,350 L520,510 L1080,510 L1080,350 L1120,350" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#crow)"/>
+<text x="430" y="341" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63" text-anchor="middle">1 : N  seats belong to a screen</text>
+<path d="M1265.0,425 L1265.0,443 L1430,443 L1430,767.5" fill="none" stroke="#3A3C42" stroke-width="1.3" marker-start="url(#tri)"/>
+<path d="M1430,527.5 H1410" fill="none" stroke="#3A3C42" stroke-width="1.3"/>
+<path d="M1430,647.5 H1410" fill="none" stroke="#3A3C42" stroke-width="1.3"/>
+<path d="M1430,767.5 H1410" fill="none" stroke="#3A3C42" stroke-width="1.3"/>
+<path d="M865.0,718 L865.0,736 L1035,736 L1035,1070.0" fill="none" stroke="#3A3C42" stroke-width="1.3" marker-start="url(#tri)"/>
+<path d="M1035,818.5 H1020" fill="none" stroke="#3A3C42" stroke-width="1.3"/>
+<path d="M1035,948.5 H1020" fill="none" stroke="#3A3C42" stroke-width="1.3"/>
+<path d="M1035,1070.0 H1020" fill="none" stroke="#3A3C42" stroke-width="1.3"/>
+<path d="M180.0,849 L180.0,867 L45,867 L45,1026.0" fill="none" stroke="#3A3C42" stroke-width="1.3" marker-start="url(#tri)"/>
+<path d="M45,916.0 H330" fill="none" stroke="#3A3C42" stroke-width="1.3"/>
+<path d="M45,1026.0 H330" fill="none" stroke="#3A3C42" stroke-width="1.3"/>
+<rect x="30" y="80" width="300" height="174" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M30,110 H330" stroke="#16181C" stroke-width="1.1"/>
+<text x="42" y="100" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">Movie</text>
+<text x="42" y="131" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- movieId : int</text>
+<text x="42" y="148" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- title : String</text>
+<text x="42" y="165" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- genre : String</text>
+<text x="42" y="182" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- language : String</text>
+<text x="42" y="199" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- runtimeMin : int</text>
+<text x="42" y="216" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- releaseDate : LocalDate</text>
+<text x="42" y="233" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- certificate : Certificate</text>
+<text x="42" y="250" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- imdbRating : BigDecimal</text>
+<rect x="30" y="290" width="300" height="114" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M30,320 H330" stroke="#16181C" stroke-width="1.1"/>
+<text x="42" y="310" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">Screen</text>
+<text x="42" y="341" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- screenId : int</text>
+<text x="42" y="358" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- name : String</text>
+<text x="42" y="375" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- seatCapacity : int</text>
+<path d="M30,379 H330" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="42" y="400" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ seatsAvailable(Showtime) : int</text>
+<rect x="30" y="450" width="300" height="148" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M30,480 H330" stroke="#16181C" stroke-width="1.1"/>
+<text x="42" y="470" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">Customer</text>
+<text x="42" y="501" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- customerId : int</text>
+<text x="42" y="518" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- fullName : String</text>
+<text x="42" y="535" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- email : String</text>
+<text x="42" y="552" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- phone : String</text>
+<text x="42" y="569" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- joinedOn : LocalDate</text>
+<path d="M30,573 H330" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="42" y="594" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ displayName() : String</text>
+<rect x="30" y="650" width="300" height="199" rx="2" fill="#DCD7C9" stroke="#16181C" stroke-width="1.3"/>
+<path d="M30,697 H330" stroke="#16181C" stroke-width="1.1"/>
+<text x="42" y="670" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#6B6A63">«abstract»</text>
+<text x="42" y="690" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C" font-style="italic">StaffUser</text>
+<text x="42" y="718" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C"># staffId : int</text>
+<text x="42" y="735" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C"># username : String</text>
+<text x="42" y="752" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C"># fullName : String</text>
+<text x="42" y="769" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C"># role : Role</text>
+<text x="42" y="786" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C"># passwordHash : String</text>
+<path d="M30,790 H330" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="42" y="811" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ authenticate(raw : String) : boolean</text>
+<text x="42" y="828" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ homeScreen() : String</text>
+<text x="42" y="845" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ canManageProgramme() : boolean</text>
+<rect x="70" y="880" width="260" height="72" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M70,910 H330" stroke="#16181C" stroke-width="1.1"/>
+<text x="82" y="900" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">Administrator</text>
+<path d="M70,910 H330" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="82" y="931" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ homeScreen() : "Reports"</text>
+<text x="82" y="948" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ canManageProgramme() : true</text>
+<rect x="70" y="990" width="260" height="72" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M70,1020 H330" stroke="#16181C" stroke-width="1.1"/>
+<text x="82" y="1010" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">BoxOfficeOperator</text>
+<path d="M70,1020 H330" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="82" y="1041" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ homeScreen() : "Schedule"</text>
+<text x="82" y="1058" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ canManageProgramme() : false</text>
+<rect x="370" y="80" width="300" height="182" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M370,110 H670" stroke="#16181C" stroke-width="1.1"/>
+<text x="382" y="100" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">Showtime</text>
+<text x="382" y="131" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- showtimeId : int</text>
+<text x="382" y="148" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- showDate : LocalDate</text>
+<text x="382" y="165" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- startTime : LocalTime</text>
+<text x="382" y="182" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- basePrice : BigDecimal</text>
+<text x="382" y="199" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- movie : Movie</text>
+<text x="382" y="216" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- screen : Screen</text>
+<path d="M370,220 H670" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="382" y="241" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ seatsSold() : int</text>
+<text x="382" y="258" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ isSoldOut() : boolean</text>
+<rect x="370" y="580" width="300" height="123" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M370,610 H670" stroke="#16181C" stroke-width="1.1"/>
+<text x="382" y="600" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">AuditEntry</text>
+<text x="382" y="631" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- auditId : int</text>
+<text x="382" y="648" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- bookingId : int</text>
+<text x="382" y="665" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- oldStatus : BookingStatus</text>
+<text x="382" y="682" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- newStatus : BookingStatus</text>
+<text x="382" y="699" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- changedAt : LocalDateTime</text>
+<rect x="710" y="80" width="310" height="403" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M710,110 H1020" stroke="#16181C" stroke-width="1.1"/>
+<text x="722" y="100" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">Booking</text>
+<text x="722" y="131" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- bookingId : int</text>
+<text x="722" y="148" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- bookedAt : LocalDateTime</text>
+<text x="722" y="165" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- status : BookingStatus</text>
+<text x="722" y="182" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- ticketAmount : BigDecimal</text>
+<text x="722" y="199" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- fnbAmount : BigDecimal</text>
+<text x="722" y="216" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- totalAmount : BigDecimal</text>
+<text x="722" y="233" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- refundAmount : BigDecimal</text>
+<text x="722" y="250" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- customer : Customer</text>
+<text x="722" y="267" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- showtime : Showtime</text>
+<text x="722" y="284" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- tickets : List&lt;Ticket&gt;</text>
+<text x="722" y="301" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- concessions : List&lt;ConcessionLine&gt;</text>
+<text x="722" y="318" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- soldBy : StaffUser</text>
+<text x="722" y="335" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- cancelledBy : StaffUser</text>
+<path d="M710,339 H1020" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="722" y="360" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ addSeat(seat, price) : void</text>
+<text x="722" y="377" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ addConcession(item, qty) : void</text>
+<text x="722" y="394" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ removeSeat(seat) : void</text>
+<text x="722" y="411" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ confirm() : void</text>
+<text x="722" y="428" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ cancel() : void</text>
+<text x="722" y="445" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ recalculateTotal() : void</text>
+<text x="722" y="462" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ fnbTotal() : BigDecimal</text>
+<text x="722" y="479" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ isExpired(now) : boolean</text>
+<rect x="710" y="570" width="310" height="148" rx="2" fill="#DCD7C9" stroke="#16181C" stroke-width="1.3"/>
+<path d="M710,617 H1020" stroke="#16181C" stroke-width="1.1"/>
+<text x="722" y="590" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#6B6A63">«abstract»</text>
+<text x="722" y="610" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C" font-style="italic">Payment</text>
+<text x="722" y="638" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C"># paymentId : int</text>
+<text x="722" y="655" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C"># amount : BigDecimal</text>
+<text x="722" y="672" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C"># paidAt : LocalDateTime</text>
+<text x="722" y="689" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C"># method : PaymentMethod</text>
+<path d="M710,693 H1020" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="722" y="714" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ renderReceipt(b : Booking) : String</text>
+<rect x="740" y="770" width="280" height="97" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M740,800 H1020" stroke="#16181C" stroke-width="1.1"/>
+<text x="752" y="790" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">CardPayment</text>
+<text x="752" y="821" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- cardLast4 : String</text>
+<text x="752" y="838" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- authCode : String</text>
+<path d="M740,842 H1020" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="752" y="863" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ renderReceipt(b) : String</text>
+<rect x="740" y="900" width="280" height="97" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M740,930 H1020" stroke="#16181C" stroke-width="1.1"/>
+<text x="752" y="920" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">UpiPayment</text>
+<text x="752" y="951" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- vpa : String</text>
+<text x="752" y="968" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- upiRef : String</text>
+<path d="M740,972 H1020" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="752" y="993" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ renderReceipt(b) : String</text>
+<rect x="740" y="1030" width="280" height="80" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M740,1060 H1020" stroke="#16181C" stroke-width="1.1"/>
+<text x="752" y="1050" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">CashPayment</text>
+<text x="752" y="1081" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- tendered : BigDecimal</text>
+<path d="M740,1085 H1020" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="752" y="1106" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ renderReceipt(b) : String</text>
+<rect x="1120" y="80" width="290" height="148" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M1120,110 H1410" stroke="#16181C" stroke-width="1.1"/>
+<text x="1132" y="100" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">Ticket</text>
+<text x="1132" y="131" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- seat : Seat</text>
+<text x="1132" y="148" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- showtime : Showtime</text>
+<text x="1132" y="165" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- price : BigDecimal</text>
+<text x="1132" y="182" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- rowLabel : char</text>
+<text x="1132" y="199" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- seatNo : int</text>
+<path d="M1120,203 H1410" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="1132" y="224" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ label() : String</text>
+<rect x="1120" y="260" width="290" height="165" rx="2" fill="#DCD7C9" stroke="#16181C" stroke-width="1.3"/>
+<path d="M1120,307 H1410" stroke="#16181C" stroke-width="1.1"/>
+<text x="1132" y="280" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#6B6A63">«abstract»</text>
+<text x="1132" y="300" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C" font-style="italic">Seat</text>
+<text x="1132" y="328" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C"># seatId : int</text>
+<text x="1132" y="345" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C"># rowLabel : char</text>
+<text x="1132" y="362" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C"># seatNo : int</text>
+<text x="1132" y="379" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C"># seatClass : SeatClass</text>
+<path d="M1120,383 H1410" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="1132" y="404" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ priceFor(showtime) : BigDecimal</text>
+<text x="1132" y="421" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ label() : String</text>
+<rect x="1150" y="500" width="260" height="55" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M1150,530 H1410" stroke="#16181C" stroke-width="1.1"/>
+<text x="1162" y="520" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">RegularSeat</text>
+<path d="M1150,530 H1410" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="1162" y="551" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ priceFor(s) : 1.00 x base</text>
+<rect x="1150" y="620" width="260" height="55" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M1150,650 H1410" stroke="#16181C" stroke-width="1.1"/>
+<text x="1162" y="640" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">PremiumSeat</text>
+<path d="M1150,650 H1410" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="1162" y="671" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ priceFor(s) : 1.25 x base</text>
+<rect x="1150" y="740" width="260" height="55" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M1150,770 H1410" stroke="#16181C" stroke-width="1.1"/>
+<text x="1162" y="760" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">ReclinerSeat</text>
+<path d="M1150,770 H1410" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="1162" y="791" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ priceFor(s) : 1.60 x base</text>
+<rect x="1460" y="80" width="250" height="106" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M1460,127 H1710" stroke="#16181C" stroke-width="1.1"/>
+<text x="1472" y="100" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#6B6A63">«enumeration»</text>
+<text x="1472" y="120" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">SeatClass</text>
+<text x="1472" y="148" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">REGULAR</text>
+<text x="1472" y="165" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">PREMIUM</text>
+<text x="1472" y="182" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">RECLINER</text>
+<rect x="1460" y="230" width="250" height="106" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M1460,277 H1710" stroke="#16181C" stroke-width="1.1"/>
+<text x="1472" y="250" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#6B6A63">«enumeration»</text>
+<text x="1472" y="270" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">BookingStatus</text>
+<text x="1472" y="298" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">HELD</text>
+<text x="1472" y="315" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">CONFIRMED</text>
+<text x="1472" y="332" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">CANCELLED</text>
+<rect x="1460" y="380" width="250" height="106" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M1460,427 H1710" stroke="#16181C" stroke-width="1.1"/>
+<text x="1472" y="400" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#6B6A63">«enumeration»</text>
+<text x="1472" y="420" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">PaymentMethod</text>
+<text x="1472" y="448" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">CARD</text>
+<text x="1472" y="465" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">UPI</text>
+<text x="1472" y="482" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">CASH</text>
+<rect x="1460" y="530" width="250" height="123" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M1460,577 H1710" stroke="#16181C" stroke-width="1.1"/>
+<text x="1472" y="550" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#6B6A63">«enumeration»</text>
+<text x="1472" y="570" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">ItemCategory</text>
+<text x="1472" y="598" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">SNACK</text>
+<text x="1472" y="615" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">DRINK</text>
+<text x="1472" y="632" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">COMBO</text>
+<text x="1472" y="649" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">DESSERT</text>
+<rect x="370" y="1170" width="300" height="148" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M370,1200 H670" stroke="#16181C" stroke-width="1.1"/>
+<text x="382" y="1190" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">ConcessionItem</text>
+<text x="382" y="1221" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- itemId : int</text>
+<text x="382" y="1238" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- name : String</text>
+<text x="382" y="1255" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- category : ItemCategory</text>
+<text x="382" y="1272" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- unitPrice : BigDecimal</text>
+<text x="382" y="1289" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- active : boolean</text>
+<path d="M370,1293 H670" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="382" y="1314" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ priceFor(qty) : BigDecimal</text>
+<rect x="710" y="1170" width="310" height="131" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M710,1200 H1020" stroke="#16181C" stroke-width="1.1"/>
+<text x="722" y="1190" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">BookingConcession</text>
+<text x="722" y="1221" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- bookingId : int</text>
+<text x="722" y="1238" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- itemId : int</text>
+<text x="722" y="1255" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- quantity : int</text>
+<text x="722" y="1272" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- unitPrice : BigDecimal</text>
+<path d="M710,1276 H1020" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="722" y="1297" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ lineTotal() : BigDecimal</text>
+<rect x="1120" y="1170" width="290" height="148" rx="2" fill="white" stroke="#16181C" stroke-width="1.3"/>
+<path d="M1120,1217 H1410" stroke="#16181C" stroke-width="1.1"/>
+<text x="1132" y="1190" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#6B6A63">«record»</text>
+<text x="1132" y="1210" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="600" fill="#16181C">ConcessionLine</text>
+<text x="1132" y="1238" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- name : String</text>
+<text x="1132" y="1255" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- category : ItemCategory</text>
+<text x="1132" y="1272" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- quantity : int</text>
+<text x="1132" y="1289" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">- unitPrice : BigDecimal</text>
+<path d="M1120,1293 H1410" stroke="#3A3C42" stroke-width="0.8" stroke-dasharray="3 2"/>
+<text x="1132" y="1314" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">+ lineTotal() : BigDecimal</text>
+<text x="30" y="1366" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63">Multiplicity is shown at each end of an association. Enumerations are declared on the right; every enum lives in com.cinebook.model.enums. BookingDraft (Builder) and PaymentFactory are omitted for clarity.</text>
+<text x="30" y="1386" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#6B6A63">ConcessionLine is the immutable line Booking holds: BookingDao maps each booking_concession row into one, snapshotted at sale time.</text>
+</svg>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.cinebook</groupId>
+  <artifactId>cinebook</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <name>CineBook</name>
+  <description>Cinema ticketing management system — JavaFX 21 + MySQL 8</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>21</maven.compiler.release>
+
+    <javafx.version>21.0.2</javafx.version>
+    <mysql.version>8.4.0</mysql.version>
+    <junit.version>5.10.2</junit.version>
+
+    <!--
+      `mvn test` runs the unit group only, so it stays green with MySQL stopped and
+      no display attached. `-Dgroups=db` and `-Dgroups=ui` activate the profiles
+      below, which clear this exclusion and run that group instead — the `groups`
+      property already narrows the run, so the profile only has to lift the
+      exclusion. Both commands are the ones documented in docs/PRD.md §14.1.
+    -->
+    <groups></groups>
+    <excludedGroups>db,ui</excludedGroups>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-controls</artifactId>
+      <version>${javafx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-fxml</artifactId>
+      <version>${javafx.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <version>${mysql.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+        <configuration>
+          <groups>${groups}</groups>
+          <excludedGroups>${excludedGroups}</excludedGroups>
+        </configuration>
+      </plugin>
+
+      <!--
+        Dev launch: `mvn javafx:run`. The launcher class does NOT extend
+        Application (docs/PRD.md §13.4) so the shaded jar starts on a machine
+        with no JavaFX modules on the path. Both arrive in phase 2.
+      -->
+      <plugin>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-maven-plugin</artifactId>
+        <version>0.0.8</version>
+        <configuration>
+          <mainClass>com.cinebook.ui.Launcher</mainClass>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>      <profile>
+      <id>db-tests</id>
+      <activation>
+        <property>
+          <name>groups</name>
+          <value>db</value>
+        </property>
+      </activation>
+      <properties>
+        <excludedGroups></excludedGroups>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>ui-tests</id>
+      <activation>
+        <property>
+          <name>groups</name>
+          <value>ui</value>
+        </property>
+      </activation>
+      <properties>
+        <excludedGroups></excludedGroups>
+      </properties>
+    </profile>
+  </profiles>
+</project>

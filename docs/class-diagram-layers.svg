@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="880" viewBox="0 0 1400 880">
+<rect width="1400" height="880" fill="white"/>
+<text x="30" y="46" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#16181C">CineBook — application layers</text><text x="1370" y="46" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#6B6A63" text-anchor="end">diagram 2 of 2 · who may talk to whom</text><path d="M30,60 H1370" stroke="#16181C" stroke-width="1"/>
+
+<defs>
+  <marker id="tri" viewBox="0 0 14 14" refX="1" refY="7" markerWidth="14"
+          markerHeight="14" orient="auto">
+    <path d="M13,1 L1,7 L13,13 z" fill="white" stroke="#16181C" stroke-width="1.2"/>
+  </marker>
+  <marker id="crow" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14"
+          markerHeight="14" orient="auto">
+    <path d="M12,7 L1,1 M12,7 L1,7 M12,7 L1,13" fill="none" stroke="#3A3C42"
+          stroke-width="1.1"/>
+  </marker>
+  <marker id="open" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14"
+          markerHeight="14" orient="auto">
+    <path d="M1,1 L13,7 L1,13" fill="none" stroke="#3A3C42" stroke-width="1.1"/>
+  </marker>
+</defs>
+
+<rect x="60" y="90" width="1280" height="140" rx="3" fill="#F7F5EF" stroke="#16181C" stroke-width="1.2"/>
+<path d="M60,124 H1340" stroke="#16181C" stroke-width="1"/>
+<text x="74" y="113" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#16181C">Presentation  ·  com.cinebook.ui</text>
+<text x="1326" y="113" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" fill="#6B6A63" text-anchor="end">depends on services only</text>
+<text x="74" y="138" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">LoginController   DashboardController   ScheduleController   SeatMapController   CheckoutController   BookingsController   ReportsController</text>
+<text x="74" y="158" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">FXML views + one stylesheet. No SQL, no java.sql import, no Connection.</text>
+<rect x="60" y="270" width="800" height="140" rx="3" fill="#F7F5EF" stroke="#16181C" stroke-width="1.2"/>
+<path d="M60,304 H860" stroke="#16181C" stroke-width="1"/>
+<text x="74" y="293" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#16181C">Service  ·  com.cinebook.service</text>
+<text x="846" y="293" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" fill="#6B6A63" text-anchor="end">owns transactions</text>
+<text x="74" y="318" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">BookingService    ScheduleService    AuthService    ReportService</text>
+<text x="74" y="338" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">The only layer that opens, commits or rolls back a transaction.</text>
+<text x="74" y="358" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">BookingService records soldBy / cancelledBy — a refund never includes food.</text>
+<rect x="900" y="270" width="440" height="140" rx="3" fill="#F7F5EF" stroke="#16181C" stroke-width="1.2"/>
+<path d="M900,304 H1340" stroke="#16181C" stroke-width="1"/>
+<text x="914" y="293" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#16181C">«interface» ReportQuery</text>
+<text x="1326" y="293" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" fill="#6B6A63" text-anchor="end">Strategy pattern</text>
+<text x="914" y="318" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">RevenueByScreen   TopFilms   DormantFilms</text>
+<text x="914" y="338" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">OccupancyReport   LoyalCustomers</text>
+<text x="914" y="358" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">One Strategy implementation per report tab.</text>
+<rect x="60" y="450" width="1280" height="150" rx="3" fill="#F7F5EF" stroke="#16181C" stroke-width="1.2"/>
+<path d="M60,484 H1340" stroke="#16181C" stroke-width="1"/>
+<text x="74" y="473" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#16181C">Data access  ·  com.cinebook.dao</text>
+<text x="1326" y="473" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" fill="#6B6A63" text-anchor="end">one DAO per aggregate</text>
+<text x="74" y="498" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">«interface» Repository&lt;T extends Identifiable&lt;K&gt;, K&gt;   — findAll · findById · save · update · delete</text>
+<text x="74" y="518" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">MovieDao   ScreenDao   SeatDao   ShowtimeDao   CustomerDao   BookingDao   TicketDao   PaymentDao   StaffDao   AuditDao   ConcessionDao</text>
+<text x="74" y="538" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">Stateless. Owns the SQL. PreparedStatement only — never string concatenation.</text>
+<rect x="60" y="640" width="380" height="130" rx="3" fill="#F7F5EF" stroke="#16181C" stroke-width="1.2"/>
+<path d="M60,674 H440" stroke="#16181C" stroke-width="1"/>
+<text x="74" y="663" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#16181C">Infrastructure  ·  com.cinebook.util</text>
+<text x="74" y="688" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">Db (singleton, DriverManager)</text>
+<text x="74" y="708" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">ReceiptWriter (file I/O)</text>
+<text x="74" y="728" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">Formatters (money, dates)</text>
+<rect x="480" y="640" width="340" height="130" rx="3" fill="#F7F5EF" stroke="#16181C" stroke-width="1.2"/>
+<path d="M480,674 H820" stroke="#16181C" stroke-width="1"/>
+<text x="494" y="663" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#16181C">Exceptions  ·  com.cinebook.exception</text>
+<text x="494" y="688" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">BookingException (checked)</text>
+<text x="494" y="708" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">SeatUnavailableException  PaymentFailedException</text>
+<text x="494" y="728" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">ValidationException  AuthException</text>
+<rect x="860" y="640" width="480" height="130" rx="3" fill="#F7F5EF" stroke="#16181C" stroke-width="1.2"/>
+<path d="M860,674 H1340" stroke="#16181C" stroke-width="1"/>
+<text x="874" y="663" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#16181C">MySQL 8.0  ·  schema cinebook</text>
+<text x="1326" y="663" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" fill="#6B6A63" text-anchor="end">external</text>
+<text x="874" y="688" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">12 tables   ·   2 views   ·   1 trigger   ·   1 procedure</text>
+<text x="874" y="708" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#16181C">Reached only through cinebook_app (DML, no DDL rights).</text>
+<path d="M400,230 L400,270" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#open)"/>
+<text x="408" y="254.0" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" fill="#6B6A63">calls</text>
+<path d="M400,410 L400,450" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#open)"/>
+<text x="408" y="434.0" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" fill="#6B6A63">calls</text>
+<path d="M400,600 L400,640" fill="none" stroke="#3A3C42" stroke-width="1.2" marker-end="url(#open)"/>
+<text x="408" y="624.0" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="10.5" fill="#6B6A63">opens</text>
+<path d="M700,450 L700,425 L700,410" fill="none" stroke="#3A3C42" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#tri)"/>
+</svg>
