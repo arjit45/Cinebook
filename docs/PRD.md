@@ -909,8 +909,15 @@ an error code. The `UNIQUE` key is what actually prevents it.
 | MySQL not running (`08S01`) | banner: "MySQL is not running — start the service" |
 | Failure mid-checkout | rollback; cart preserved; nothing half-written |
 | Expired hold | countdown chip on the seat map; auto-release at 10 min |
-| App closed holding seats | the background job releases them within 60 s |
+| App closed holding seats | nothing runs while the process is gone; the next launch's first sweep releases them within 60 s of starting |
 | Stale connection | validate on borrow (`isValid(2)`), reconnect once on `08S01` / `08003`, then `DbUnavailableException` → banner |
+
+The expiry row is deliberately in-process (`HoldExpiryDaemon`): a closed application
+cannot release its own holds, and the TTL is not enforced by MySQL while no client is
+running. Reopening the app is what sweeps the backlog — the first tick runs immediately
+on `start()`, not after a minute. A server-side MySQL `EVENT` would release holds with
+every terminal closed, but that trades away the single-process design and needs
+`event_scheduler=ON`; it is not part of this build.
 
 Isolation stays at MySQL's default (`REPEATABLE READ`); the explicit row lock in
 `sp_confirm_booking` is what makes the critical section safe, not the isolation level.
@@ -1016,7 +1023,7 @@ tested instantly; only `BookingService` waits for a database.
 | `Booking` state machine | unit | illegal transitions must throw, not mutate | cancelling an already-cancelled booking → `ValidationException` |
 | validation rules | unit | cheap and table-driven | phone `12` rejected; duplicate email rejected; quantity `0` rejected |
 | `ReceiptWriter` | unit | file I/O without littering the repo | writes into a temp dir; output contains the booking reference; food sits below the seats; every line is ≤ 40 columns |
-| `BookingService` | `db` | the only place a transaction is opened | same seat held twice → `SeatUnavailableException`; sweep expired holds → seats freed; cancel 90 min out → `refund_amount` = 90% of `ticket_amount` |
+| `BookingService` | `db` | the only place a transaction is opened | same seat held twice → `SeatUnavailableException`; sweep expired holds → seats freed, live holds untouched; cancel 3 h out → 90% of `ticket_amount`, exactly 2 h out → 50% |
 | `HoldExpiryDaemon` | `db` | background hold maintenance | daemon starts and stops cleanly; sweeps expired holds without clerk attribution |
 
 The **price snapshot** gets its own test, because it is the invariant every report

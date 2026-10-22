@@ -482,15 +482,23 @@ INSERT INTO concession_item (name, category, unit_price) VALUES
 -- ------------------------------------------------------------
 -- Bookings: 300, spread across every current showtime.
 -- Every row records the clerk who sold it (sold_by_staff_id).
--- Every 19th row (booking_id = 19k + 1) is cancelled later, in
--- step 3 below, because a CANCELLED row needs cancelled_at at the
--- same moment the status changes.
+-- Every 7th row is HELD. The 40 that stay HELD are booked a few
+-- minutes ago, inside the 10-minute hold TTL, so the expiry job
+-- leaves them for the demo; the three HELD rows that step 4
+-- cancels keep the historical timestamp that matches their
+-- cancelled_at. Every 19th row (booking_id = 19k + 1) is
+-- cancelled later, because a CANCELLED row needs cancelled_at at
+-- the same moment the status changes.
 -- ------------------------------------------------------------
 INSERT INTO booking (customer_id, showtime_id, booked_at, status, sold_by_staff_id)
 SELECT 1 + ((nums.n * 7) % 20),
        st.showtime_id,
-       TIMESTAMP(LEAST(st.show_date, CURDATE()), '11:00:00')
-           - INTERVAL ((nums.n % 60) + 2) HOUR,
+       CASE
+           WHEN nums.n % 7 = 0 AND nums.n % 19 <> 0
+               THEN NOW() - INTERVAL (1 + (nums.n % 5)) MINUTE
+           ELSE TIMESTAMP(LEAST(st.show_date, CURDATE()), '11:00:00')
+                - INTERVAL ((nums.n % 60) + 2) HOUR
+       END,
        CASE WHEN nums.n % 7 = 0 THEN 'HELD' ELSE 'CONFIRMED' END,
        1 + (nums.n % 2)
 FROM nums

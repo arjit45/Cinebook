@@ -18,13 +18,16 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import com.cinebook.model.BookingSummary;
+import com.cinebook.model.enums.BookingStatus;
 import com.cinebook.model.enums.PaymentMethod;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -237,28 +240,43 @@ class BookingServiceTest {
         Showtime show = new ShowtimeDao(DB).upcoming(1).get(0);
         StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
         BookingService service = new BookingService(DB);
+        CheckoutService checkout = new CheckoutService(DB);
+
         List<Seat> seats = freeSeats(show, 1);
         String label = seats.get(0).label();
+        BookingService.Held expired = service.hold(show, seats, operator);
+        created.add(expired.bookingId());
+        // Food written during the hold must be swept too: the booking row survives
+        // for the audit trail, so its ON DELETE CASCADE never fires.
+        checkout.setFood(expired.bookingId(), checkout.menu().get(0), 2);
+        assertEquals(1, foodLines(expired.bookingId()), "the hold carries its food line");
 
-        BookingService.Held held = service.hold(show, seats, operator);
-        created.add(held.bookingId());
+        // A second, live hold proves the cutoff decides what is swept — not
+        // "everything currently HELD". The old future cutoff cancelled all 40
+        // seeded holds, so every run of this suite damaged the demo data.
+        Seat liveSeat = freeSeats(show, 1).get(0);
+        BookingService.Held live = service.hold(show, List.of(liveSeat), operator);
+        created.add(live.bookingId());
 
-        // Verify the seat is locked
+        backdate(expired.bookingId(), LocalDateTime.of(2000, 1, 1, 9, 0));
         assertTrue(new SeatDao(DB).soldLabels(show.showtimeId()).contains(label));
 
-        // Sweep with cutoff in the future: sweeps this hold
-        int swept = service.sweepExpiredHolds(LocalDateTime.now().plusMinutes(5));
-        assertTrue(swept >= 1, "at least our created hold was swept");
+        int swept = service.sweepExpiredHolds(LocalDateTime.of(2000, 1, 2, 0, 0));
 
-        // Verify seat is free again
-        assertFalse(new SeatDao(DB).soldLabels(show.showtimeId()).contains(label));
+        assertEquals(1, swept, "only the backdated hold is before the cutoff");
+        assertFalse(new SeatDao(DB).soldLabels(show.showtimeId()).contains(label),
+                "a swept hold must put its seat back on sale");
+        assertEquals(0, foodLines(expired.bookingId()), "the hold's food lines go with it");
+        assertEquals("HELD", statusOf(live.bookingId()),
+                "a hold inside the TTL must survive the sweep");
+        assertTrue(new SeatDao(DB).soldLabels(show.showtimeId()).contains(liveSeat.label()),
+                "the live hold keeps its seat");
 
-        // Verify booking status CANCELLED and cancelled_by_staff_id is NULL
         try (Db.Handle handle = DB.borrow();
              Connection connection = handle.connection();
              PreparedStatement statement = connection.prepareStatement(
                      "SELECT status, cancelled_by_staff_id, refund_amount FROM booking WHERE booking_id = ?")) {
-            statement.setInt(1, held.bookingId());
+            statement.setInt(1, expired.bookingId());
             try (ResultSet row = statement.executeQuery()) {
                 assertTrue(row.next());
                 assertEquals("CANCELLED", row.getString("status"));
@@ -266,6 +284,26 @@ class BookingServiceTest {
                 assertEquals(0, BigDecimal.ZERO.compareTo(row.getBigDecimal("refund_amount")));
             }
         }
+    }
+
+    @Test
+    void sweepNeverTouchesAPaidBookingEvenPastTheCutoff() throws Exception {
+        Showtime show = new ShowtimeDao(DB).upcoming(1).get(0);
+        StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
+        BookingService service = new BookingService(DB);
+        CheckoutService checkout = new CheckoutService(DB);
+
+        BookingService.Held paid = service.hold(show, freeSeats(show, 1), operator);
+        created.add(paid.bookingId());
+        checkout.pay(paid.bookingId(), PaymentMethod.CARD);
+        backdate(paid.bookingId(), LocalDateTime.of(2000, 1, 1, 9, 0));
+
+        int swept = service.sweepExpiredHolds(LocalDateTime.of(2000, 1, 2, 0, 0));
+
+        assertEquals(0, swept, "a CONFIRMED booking is not an expired hold");
+        assertEquals("CONFIRMED", statusOf(paid.bookingId()));
+        assertEquals(1, ticketCount(paid.bookingId()),
+                "a paid booking must keep its tickets — deleting them would resell the seat");
     }
 
     @Test
@@ -333,11 +371,25 @@ class BookingServiceTest {
         List<BookingSummary> recent = service.list(null, 10);
         assertFalse(recent.isEmpty(), "recent bookings must not be empty");
 
-        // Search by known booking
         BookingSummary first = recent.get(0);
-        List<BookingSummary> byId = service.list(String.valueOf(first.bookingId()), 5);
-        assertFalse(byId.isEmpty());
-        assertEquals(first.bookingId(), byId.get(0).bookingId());
+        assertEquals(String.format("BK-%04d", first.bookingId()), first.reference(),
+                "the register and the receipt use one reference format");
+
+        // The same booking is reachable by id, by the printed reference, and by
+        // the show date — the three things a clerk has at the counter.
+        for (String query : List.of(
+                String.valueOf(first.bookingId()),
+                first.reference(),
+                first.showDate().toString())) {
+            List<BookingSummary> matches = service.list(query, 50);
+            assertTrue(matches.stream().anyMatch(b -> b.bookingId() == first.bookingId()),
+                    "searching '" + query + "' must find " + first.reference());
+        }
+
+        List<BookingSummary> confirmed = service.list(null, BookingStatus.CONFIRMED, 10);
+        assertFalse(confirmed.isEmpty());
+        assertTrue(confirmed.stream().allMatch(b -> b.status() == BookingStatus.CONFIRMED),
+                "the status filter belongs in the query");
 
         Optional<BookingSummary> found = service.find(first.bookingId());
         assertTrue(found.isPresent());
@@ -345,16 +397,106 @@ class BookingServiceTest {
     }
 
     @Test
-    void holdExpiryDaemonLifecycleAndSweep() throws Exception {
+    void holdExpiryDaemonSweepsItsExpiredHoldAndStops() throws Exception {
+        Showtime show = new ShowtimeDao(DB).upcoming(1).get(0);
+        StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
         BookingService service = new BookingService(DB);
-        HoldExpiryDaemon daemon = new HoldExpiryDaemon(service, Clock.systemDefaultZone(), 1L);
+
+        BookingService.Held held = service.hold(show, freeSeats(show, 1), operator);
+        created.add(held.bookingId());
+        backdate(held.bookingId(), LocalDateTime.of(2000, 1, 1, 9, 0));
+
+        // A fixed 2000 clock makes the scheduler's own tick sweep this hold and
+        // nothing else: the seeded holds are in 2026 and stay for the demo.
+        LocalDateTime fixedNow = LocalDateTime.of(2000, 1, 1, 10, 0);
+        Clock clock = Clock.fixed(fixedNow.atZone(ZoneId.systemDefault()).toInstant(),
+                ZoneId.systemDefault());
+        HoldExpiryDaemon daemon = new HoldExpiryDaemon(service, clock, 1L);
+
         assertFalse(daemon.isRunning(), "daemon should not be running before start");
-        daemon.start();
-        assertTrue(daemon.isRunning(), "daemon should be running after start");
-        int swept = daemon.sweepNow();
-        assertTrue(swept >= 0, "sweepNow should complete cleanly");
-        daemon.stop();
+        try {
+            daemon.start();
+            assertTrue(daemon.isRunning(), "daemon should be running after start");
+            assertTrue(waitForStatus(held.bookingId(), "CANCELLED", 3000),
+                    "the scheduler's first tick must release an expired hold");
+        } finally {
+            daemon.stop();
+        }
         assertFalse(daemon.isRunning(), "daemon should not be running after stop");
+
+        try (Db.Handle handle = DB.borrow();
+             Connection connection = handle.connection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT cancelled_by_staff_id FROM booking WHERE booking_id = ?")) {
+            statement.setInt(1, held.bookingId());
+            try (ResultSet row = statement.executeQuery()) {
+                assertTrue(row.next());
+                assertNull(row.getObject("cancelled_by_staff_id"),
+                        "a scheduler sweep is attributed to the system, never a clerk");
+            }
+        }
+    }
+
+    /** Moves a created booking into the far past so a fixed cutoff can target it. */
+    private static void backdate(int bookingId, LocalDateTime bookedAt) throws SQLException {
+        try (Db.Handle handle = DB.borrow();
+             PreparedStatement statement = handle.connection().prepareStatement(
+                     "UPDATE booking SET booked_at = ? WHERE booking_id = ?")) {
+            statement.setTimestamp(1, Timestamp.valueOf(bookedAt));
+            statement.setInt(2, bookingId);
+            statement.executeUpdate();
+        }
+    }
+
+    private static String statusOf(int bookingId) throws SQLException {
+        try (Db.Handle handle = DB.borrow();
+             Connection connection = handle.connection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT status FROM booking WHERE booking_id = ?")) {
+            statement.setInt(1, bookingId);
+            try (ResultSet row = statement.executeQuery()) {
+                assertTrue(row.next(), "booking " + bookingId + " must exist");
+                return row.getString("status");
+            }
+        }
+    }
+
+    private static int foodLines(int bookingId) throws SQLException {
+        try (Db.Handle handle = DB.borrow();
+             Connection connection = handle.connection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT COUNT(*) AS n FROM booking_concession WHERE booking_id = ?")) {
+            statement.setInt(1, bookingId);
+            try (ResultSet row = statement.executeQuery()) {
+                row.next();
+                return row.getInt("n");
+            }
+        }
+    }
+
+    private static int ticketCount(int bookingId) throws SQLException {
+        try (Db.Handle handle = DB.borrow();
+             Connection connection = handle.connection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT COUNT(*) AS n FROM ticket WHERE booking_id = ?")) {
+            statement.setInt(1, bookingId);
+            try (ResultSet row = statement.executeQuery()) {
+                row.next();
+                return row.getInt("n");
+            }
+        }
+    }
+
+    private static boolean waitForStatus(int bookingId, String expected, long timeoutMillis)
+            throws Exception {
+        long deadline = System.nanoTime() + timeoutMillis * 1_000_000L;
+        while (System.nanoTime() < deadline) {
+            if (expected.equals(statusOf(bookingId))) {
+                return true;
+            }
+            Thread.sleep(50);
+        }
+        return expected.equals(statusOf(bookingId));
     }
 
     private static int bookingsFor(int showtimeId) throws SQLException {

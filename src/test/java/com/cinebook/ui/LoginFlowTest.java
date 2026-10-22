@@ -1,5 +1,6 @@
 package com.cinebook.ui;
 
+import com.cinebook.dao.SeatDao;
 import com.cinebook.dao.ShowtimeDao;
 import com.cinebook.dao.StaffDao;
 import com.cinebook.model.BoxOfficeOperator;
@@ -8,6 +9,7 @@ import com.cinebook.model.Showtime;
 import com.cinebook.model.StaffUser;
 import com.cinebook.model.enums.PaymentMethod;
 import com.cinebook.service.AuthService;
+import com.cinebook.service.BookingService;
 import com.cinebook.service.CheckoutService;
 import com.cinebook.util.Db;
 import com.cinebook.util.ReceiptWriter;
@@ -37,6 +39,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -773,6 +776,98 @@ class LoginFlowTest {
     }
 
     @Test
+    void bookingsScreenSearchesByReferenceAndCancelsWithARefund() throws Exception {
+        // The first screening of the day may have started already, and a started show
+        // has no cancel button by design. Pick one that is still hours away.
+        Showtime show = new ShowtimeDao(DB).upcoming(200).stream()
+                .filter(screening -> screening.startsAt()
+                        .isAfter(LocalDateTime.now().plusHours(3)))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("the seed has no refundable screening"));
+        StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
+        BookingService service = new BookingService(DB);
+        BookingService.Held held = service.hold(show, List.of(firstFreeSeat(show)), operator);
+        int bookingId = held.bookingId();
+        try {
+            new CheckoutService(DB).pay(bookingId, PaymentMethod.CARD);
+            String reference = String.format("BK-%04d", bookingId);
+            Parent[] screen = new Parent[1];
+
+            runOnFx(() -> {
+                AuthService auth = new AuthService(new StaffDao(DB));
+                screen[0] = new ShellView(auth, operator, () -> { }).root();
+                attach(screen[0]);
+                Button nav = buttonWithText(screen[0], "Bookings");
+                assertNotNull(nav, "the operator's rail must offer Bookings");
+                nav.fire();
+                return null;
+            });
+
+            awaitFx(() -> {
+                // The register lives inside a ScrollPane; its viewport joins the
+                // scene graph on the first layout, which a test must ask for.
+                settle(screen[0]);
+                return screen[0].lookup(".panel-card") != null;
+            });
+
+            runOnFx(() -> {
+                TextField search = (TextField) screen[0].lookup(".text-field");
+                assertNotNull(search, "the register must carry a search field");
+                search.setText(reference);
+                return null;
+            });
+
+            // Search is debounced and the query runs on FxTasks, so wait for the
+            // one row the reference names rather than for a sleep.
+            awaitFx(() -> {
+                settle(screen[0]);
+                Set<Node> cards = screen[0].lookupAll(".panel-card");
+                if (cards.size() != 1) {
+                    return false;
+                }
+                Label shown = (Label) cards.iterator().next().lookup(".booking-ref");
+                return shown != null && reference.equals(shown.getText());
+            });
+
+            runOnFx(() -> {
+                Button cancel = buttonWithText(screen[0], "Cancel with refund");
+                assertNotNull(cancel, "a refundable booking must offer cancellation");
+                cancel.fire();
+                settle(screen[0]);
+                Button execute = buttonWithText(screen[0], "Execute cancellation");
+                assertNotNull(execute, "the confirmation must show the refund before committing");
+                execute.fire();
+                return null;
+            });
+
+            assertTrue(waitForBookingStatus(bookingId, "CANCELLED", 10_000),
+                    "confirming the dialog must commit the cancellation");
+
+            try (Db.Handle handle = DB.borrow();
+                 Connection connection = handle.connection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT status, refund_amount, cancelled_by_staff_id, "
+                                 + "(SELECT COUNT(*) FROM ticket WHERE booking_id = b.booking_id) AS seats "
+                                 + "FROM booking b WHERE booking_id = ?")) {
+                statement.setInt(1, bookingId);
+                try (ResultSet row = statement.executeQuery()) {
+                    assertTrue(row.next());
+                    assertEquals("CANCELLED", row.getString("status"));
+                    assertTrue(row.getBigDecimal("refund_amount").signum() > 0,
+                            "a paid ticket refunds part of its ticket amount");
+                    assertEquals(operator.staffId(), row.getInt("cancelled_by_staff_id"),
+                            "the refund belongs to the clerk who executed it");
+                    assertEquals(0, row.getInt("seats"), "the seats must be released");
+                }
+            }
+
+            awaitFx(() -> screen[0].lookup(".badge-cancelled") != null);
+        } finally {
+            deleteBooking(bookingId);
+        }
+    }
+
+    @Test
     void printingTheReceiptWritesA40ColumnSlipAndNamesTheFile() throws Exception {
         int[] held = {0};
         Parent[] screen = new Parent[1];
@@ -972,6 +1067,46 @@ class LoginFlowTest {
     }
 
     // --- the screen, driven -------------------------------------------------
+
+    /** The first seat of this screening that no ticket holds. */
+    private static Seat firstFreeSeat(Showtime show) throws Exception {
+        SeatDao seats = new SeatDao(DB);
+        Set<String> sold = seats.soldLabels(show.showtimeId());
+        return seats.byScreen(show.screen().screenId()).stream()
+                .filter(seat -> !sold.contains(seat.label()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("the screening has no free seat"));
+    }
+
+    private static Button buttonWithText(Parent root, String text) {
+        for (Node node : root.lookupAll(".button")) {
+            if (node instanceof Button button && text.equals(button.getText())) {
+                return button;
+            }
+        }
+        return null;
+    }
+
+    /** Waits from the test thread, so the FxTasks completion can reach the FX thread. */
+    private static boolean waitForBookingStatus(int bookingId, String expected, long timeoutMillis)
+            throws Exception {
+        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
+        while (System.nanoTime() < deadline) {
+            try (Db.Handle handle = DB.borrow();
+                 Connection connection = handle.connection();
+                 PreparedStatement statement = connection.prepareStatement(
+                         "SELECT status FROM booking WHERE booking_id = ?")) {
+                statement.setInt(1, bookingId);
+                try (ResultSet row = statement.executeQuery()) {
+                    if (row.next() && expected.equals(row.getString("status"))) {
+                        return true;
+                    }
+                }
+            }
+            Thread.sleep(25);
+        }
+        return false;
+    }
 
     /** The seat button for a label on the current map, or null when it is gone. */
     private static Button seatNamed(Parent shell, String label) {

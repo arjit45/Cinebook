@@ -1,12 +1,14 @@
 package com.cinebook.service;
 
 import com.cinebook.dao.BookingDao;
+import com.cinebook.dao.ConcessionDao;
 import com.cinebook.dao.CustomerDao;
 import com.cinebook.dao.SeatDao;
 import com.cinebook.exception.BookingException;
 import com.cinebook.exception.SeatUnavailableException;
 import com.cinebook.exception.ValidationException;
 import com.cinebook.model.BookingSummary;
+import com.cinebook.model.ConcessionLine;
 import com.cinebook.model.Seat;
 import com.cinebook.model.Showtime;
 import com.cinebook.model.StaffUser;
@@ -53,12 +55,14 @@ public final class BookingService {
     private final Db db;
     private final BookingDao bookings;
     private final CustomerDao customers;
+    private final ConcessionDao concessions;
     private final SeatDao seats;
 
     public BookingService(Db db) {
         this.db = db;
         this.bookings = new BookingDao();
         this.customers = new CustomerDao(db);
+        this.concessions = new ConcessionDao(db);
         this.seats = new SeatDao(db);
     }
 
@@ -170,13 +174,28 @@ public final class BookingService {
     }
 
     /**
-     * Lists bookings matching an optional search term (customer name, phone, or id),
-     * newest first, up to the given limit.
+     * Lists bookings matching an optional search term (customer name, phone, show
+     * date or reference), newest first, up to the given limit.
      */
     public List<BookingSummary> list(String query, int limit) throws SQLException {
+        return list(query, null, limit);
+    }
+
+    /**
+     * Same register, narrowed to one status by the filter chips. The filter belongs
+     * in the query: applied to the loaded page it would hide older matches that
+     * were never fetched.
+     */
+    public List<BookingSummary> list(String query, BookingStatus status, int limit)
+            throws SQLException {
         try (Db.Handle handle = db.borrow()) {
-            return bookings.search(handle.connection(), query, limit);
+            return bookings.search(handle.connection(), query, status, limit);
         }
+    }
+
+    /** The food lines for one booking; read only when the clerk expands a card. */
+    public List<ConcessionLine> foodLines(int bookingId) throws SQLException {
+        return concessions.linesFor(bookingId);
     }
 
     /**
@@ -281,7 +300,12 @@ public final class BookingService {
             connection.setAutoCommit(false);
             List<Integer> expiredIds = bookings.findExpiredHoldIds(connection, cutoff);
             for (int id : expiredIds) {
-                bookings.markCancelled(connection, id, null);
+                // The id list was locked FOR UPDATE, so this should always match. It
+                // is still checked: deleting the tickets of a booking the UPDATE did
+                // not cancel would free seats somebody has paid for.
+                if (bookings.markCancelled(connection, id, null) == 0) {
+                    continue;
+                }
                 bookings.deleteTickets(connection, id);
                 bookings.deleteConcessions(connection, id);
                 swept++;

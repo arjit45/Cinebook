@@ -728,3 +728,133 @@
 .checkout-error {
     -fx-text-fill: #B23B2A;
 }
+
+/*
+  Bookings register (docs/PRD.md §3 screen 5). One ruled card per sale on the same
+  stock as the checkout rail; status is a printed stamp, not a coloured fill over
+  the whole row, so a full page stays readable.
+*/
+.panel-card {
+    -fx-background-color: #F4EFE2;
+    -fx-background-radius: 4;
+    -fx-border-color: #E0D9C8;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+}
+
+.booking-ref {
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #16181C;
+}
+
+.booking-value {
+    -fx-font-weight: 600;
+    -fx-text-fill: #1F1F1F;
+}
+
+.booking-audit {
+    -fx-font-size: 11px;
+}
+
+.badge-held,
+.badge-confirmed,
+.badge-cancelled {
+    -fx-font-size: 9px;
+    -fx-font-weight: 700;
+    -fx-padding: 2 6 2 6;
+    -fx-background-radius: 3;
+}
+
+.badge-held {
+    -fx-background-color: #F2E3B6;
+    -fx-text-fill: #7A5A00;
+}
+
+.badge-confirmed {
+    -fx-background-color: #D8E7E1;
+    -fx-text-fill: #14615C;
+}
+
+.badge-cancelled {
+    -fx-background-color: #EFDBD5;
+    -fx-text-fill: #A33A29;
+}
+
+.button.chip-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #5F5B52;
+    -fx-font-size: 11px;
+    -fx-font-weight: 400;
+    -fx-padding: 5 12 5 12;
+    -fx-background-radius: 12;
+    -fx-border-color: #CFC8B8;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+}
+
+.button.chip-button:hover {
+    -fx-background-color: #E0DDD3;
+}
+
+.button.chip-button.selected {
+    -fx-background-color: #16181C;
+    -fx-text-fill: #E9E7DF;
+    -fx-border-color: #16181C;
+}
+
+.button.outline-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #16181C;
+    -fx-border-color: #16181C;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-font-size: 12px;
+    -fx-font-weight: 400;
+    -fx-padding: 9 16 9 16;
+}
+
+.button.outline-button:hover {
+    -fx-background-color: #E0DDD3;
+}
+
+.button.danger-button {
+    -fx-background-color: #D8412F;
+    -fx-text-fill: #F9F5E9;
+    -fx-font-size: 11px;
+    -fx-padding: 7 12 7 12;
+}
+
+.button.danger-button:hover {
+    -fx-background-color: #BF3726;
+}
+
+.cancel-confirm {
+    -fx-background-color: #F7E4DE;
+    -fx-background-radius: 4;
+    -fx-border-color: #D8412F;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-padding: 12;
+}
+
+.cancel-confirm-title {
+    -fx-font-weight: 600;
+    -fx-text-fill: #16181C;
+}
+
+.cancel-confirm-text {
+    -fx-text-fill: #3B372E;
+}
+
+.booking-food-lines {
+    -fx-padding: 8 0 0 0;
+    -fx-border-color: #E0D9C8 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.booking-food-line {
+    -fx-font-size: 11px;
+    -fx-text-fill: #3B372E;
+}

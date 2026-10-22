@@ -35,8 +35,9 @@ public record BookingSummary(
         String seats
 ) {
 
+    /** BK-0042 — the same reference the receipt file and the checkout panel use. */
     public String reference() {
-        return String.format("#%04d", bookingId);
+        return String.format("BK-%04d", bookingId);
     }
 
     public LocalDateTime startsAt() {

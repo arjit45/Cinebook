@@ -1,11 +1,82 @@
 # CineBook — Cinema Ticketing Management System
 
-A single project submitted for two subjects:
+A high-performance box-office Point-of-Sale (POS) and ticketing system engineered for multi-screen cinema multiplexes, combining an ACID-compliant MySQL 8.0 relational backend with a responsive, modern JavaFX 21 desktop application.
 
-| Subject | What it is graded on | Where it lives |
+---
+
+## Overview
+
+**CineBook** is a desktop box-office client built to streamline counter operations in busy cinemas. It allows clerks to browse screening schedules, select tiered seats on dynamic auditorium maps, bundle food and beverage concessions, process payments, and issue thermal receipts—all backed by strict concurrency controls and automated audit trails.
+
+Designed to eliminate common ticketing bottlenecks, CineBook guarantees zero seat double-booking, automatically clears abandoned holds, and provides managers with real-time shift reconciliation reports.
+
+---
+
+## Key Features
+
+- **Double-Booking Prevention (Storage Layer)**  
+  Guarantees zero seat collisions using a composite `UNIQUE (showtime_id, seat_id)` constraint on ticket claims, combined with `SELECT ... FOR UPDATE` row locks inside the `sp_confirm_booking` stored procedure. Exactly one clerk can win a contested seat, even under simultaneous high-frequency clicks.
+
+- **10-Minute Hold TTL & Background Sweeper**  
+  Holds lock seats temporarily for payment. An in-app countdown chip (`⏱ 10:00`) alerts the clerk, while an asynchronous daemon (`HoldExpiryDaemon`) runs every 60 seconds to automatically release abandoned seats and concessions back to inventory with zero shift misattribution (`cancelled_by = NULL`).
+
+- **Dynamic Auditorium Seat Maps**  
+  Seating grids are generated at runtime directly from physical screen and row data. Supports multi-tier pricing with automatic multiplier calculation: **Regular (1.00×)**, **Premium (1.25×)**, and luxury **Recliner (1.60×)**.
+
+- **Fast Concession Upselling & Snapshotted Pricing**  
+  Add snacks and drinks directly to tickets in a single checkout flow. Item prices and ticket amounts are snapshotted on the booking row at the moment of sale, ensuring future catalog price changes never alter historical till receipts.
+
+- **Refund-Aware Cancellations & Shift Auditing**  
+  Automated refund calculation enforced by database check constraints:
+  - **Early (> 2 hrs before show)**: 90% ticket refund.
+  - **Late (≤ 2 hrs before show)**: 50% ticket refund.
+  - **Started Screening**: Cancellation locked. Food & concessions are non-refundable.  
+  Every sale and cancellation records both the selling clerk (`sold_by`) and refunding clerk (`cancelled_by`) for accurate end-of-day Z-reports.
+
+- **Thermal Receipt Generator**  
+  Built-in ESC/POS receipt engine formats 40-column thermal slips (`receipts/BK-XXXX.txt`) with itemized ticket and food breakdowns, tax summaries, and clerk metadata.
+
+---
+
+## Architecture at a Glance
+
+CineBook strictly separates concerns across four decoupled layers:
+
+```
+┌────────────────────────────────────────────────────────┐
+│  Presentation Layer (JavaFX 21 · com.cinebook.ui)       │
+│  Controllers, CSS styles, FxTasks non-blocking async   │
+└──────────────────────────┬─────────────────────────────┘
+                           │ calls
+┌──────────────────────────▼─────────────────────────────┐
+│  Service Layer (com.cinebook.service)                  │
+│  Transaction boundary (commit/rollback), daemons, rules│
+└──────────────────────────┬─────────────────────────────┘
+                           │ calls
+┌──────────────────────────▼─────────────────────────────┐
+│  Data Access Layer (com.cinebook.dao)                  │
+│  Stateless JDBC DAOs, parameterized PreparedStatements │
+└──────────────────────────┬─────────────────────────────┘
+                           │ queries
+┌──────────────────────────▼─────────────────────────────┐
+│  Database (MySQL 8.0 InnoDB · cinebook)                │
+│  12 tables, constraints, views, audit triggers, procs  │
+└────────────────────────────────────────────────────────┘
+```
+
+- **UI (`com.cinebook.ui`)**: Dark-slate cinematic styling with zero SQL or database dependencies. Long queries run off the JavaFX thread via `FxTasks.run` to keep UI animations smooth.
+- **Service (`com.cinebook.service`)**: Owns transactions, business rules, and background tasks (`AuthService`, `BookingService`, `CheckoutService`, `HoldExpiryDaemon`).
+- **DAO (`com.cinebook.dao`)**: Parameterized PreparedStatements eliminate SQL injection risks.
+- **Database (`MySQL 8.0`)**: 12 normalized tables in 3NF/BCNF, foreign key cascades/restricts, integrity triggers, and reporting views.
+
+---
+
+### Dual-Discipline Academic Context
+
+| Subject | Scope | Implementation |
 |---|---|---|
-| **RDBMS** | ER diagram, schema, constraints, queries, live viva | `db/` |
-| **OOP in Java** | UI/UX, class design, patterns | `src/` |
+| **RDBMS** | ER modeling, relational schema, normalization, integrity constraints, ACID transactions, and analytical queries | `db/` (MySQL 8.0 / InnoDB) |
+| **OOP in Java** | Layered architecture, GoF design patterns, concurrent background daemons, and JavaFX UI | `src/` (Java 21 / Maven) |
 
 Database: **MySQL 8.0** (already installed on this machine) · Client: **MySQL Workbench**
 
@@ -103,7 +174,7 @@ boundary at ±1 minute, the three seat multipliers, the booking state machine, t
 snapshots, the contact rules and the 40-column receipt. They pass with MySQL stopped, which is
 the only way they stay useful ([docs/PRD.md §14.1](docs/PRD.md#L972)).
 
-`mvn test -Dgroups=db` runs 34 integration tests and does need a running server:
+`mvn test -Dgroups=db` runs 35 integration tests and does need a running server:
 the config file, the `cinebook_app` login, the seeded 300 bookings, the
 `BigDecimal`/`LocalDate`/`LocalTime` mapping and the `serverTimezone` pin, the schedule
 and seat DAOs — row order, the 96-seat auditorium, and a cross-check that
@@ -128,8 +199,9 @@ checkout panel whose stepper moves the total and whose payment footer stays on s
 while the panel scrolls, that **Print** writes a receipt file whose every line fits the
 printer, that **Release seats** closes the panel and hands the seat back — and is
 refused in the footer when another till already paid for that hold, leaving every
-control usable — and that paying shows a slip read back from the database. Fourteen
-tests, about eight seconds, a display required.
+control usable — that paying shows a slip read back from the database, and that the
+Bookings screen searches the whole register by printed reference and cancels a paid
+booking with a refund. Fifteen tests, about ten seconds, a display required.
 
 ### Running the app
 
@@ -323,37 +395,16 @@ answered here:
 
 ---
 
-## Talking points for the viva
-
-1. **Why `showtime`, not `show`?** `SHOW` is a reserved word in MySQL. Naming a table `show` forces backticks everywhere.
-2. **Why is `ticket.price` stored when `showtime.base_price` already exists?** It is a deliberate snapshot. Prices change; historical revenue must not retroactively change with them. This is a *justified* denormalization, not a mistake — and `booking_concession.unit_price`, `booking.ticket_amount` and `booking.fnb_amount` are the same decision in three more places.
-3. **Why does `ticket` carry `showtime_id`?** Denormalized on purpose so the `UNIQUE (showtime_id, seat_id)` key can enforce one ticket per seat per screening. Without it, the constraint would need a join, which a `UNIQUE` key cannot express.
-4. **How is double-booking prevented?** Two layers — the `UNIQUE` key (storage) and `SELECT … FOR UPDATE` inside `sp_confirm_booking` (concurrency).
-5. **Cancellation frees the seat** because the `ticket` rows are deleted, releasing the `UNIQUE` key — not because a status flag is flipped. The seat comes back; `ticket_amount` stays, because the refund was calculated from it.
-6. **Is the popcorn refunded?** No. The refund is a percentage of `ticket_amount`, and `chk_refund_amount` refuses anything larger — the rule is in the schema, not only in the Java.
-7. **Why two columns for staff?** `sold_by_staff_id` and `cancelled_by_staff_id`. A refund charged to whoever sold the ticket makes per-clerk reconciliation wrong on exactly the day it matters.
-8. **Where is the walk-in customer?** Row 21, `Counter Guest`. Not `customer_id = 1` — that is a real patron.
-
----
-
 ## The documents
 
 | File | What it is |
 |---|---|
-| `docs/PRD.md` | system specification, domain rules, and architecture contract |
-| `docs/SCHEMA.md` | data dictionary, generated from `db/01_schema.sql` |
-| `docs/QUERIES.md` | query catalogue with fingerprinted MySQL execution output |
-| `docs/TESTS.md` | integrity test log proving constraint and trigger refusals |
-| `docs/OOP.md` | class model, layering rules, and OOP concept coverage |
-| `docs/class-diagram-*.svg` | architectural class diagrams (domain model and layer boundaries) |
+| `docs/PRD.md` | System specification, domain rules, and architecture contract |
+| `docs/SCHEMA.md` | Data dictionary, generated from `db/01_schema.sql` |
+| `docs/QUERIES.md` | Query catalogue with fingerprinted MySQL execution output |
+| `docs/TESTS.md` | Integrity test log proving constraint and trigger refusals |
+| `docs/OOP.md` | Class model, layering rules, and OOP concept coverage |
+| `docs/class-diagram-*.svg` | Architectural class diagrams (domain model and layer boundaries) |
 | `db/viva-queries.sql` | 21 self-contained blocks to run in Workbench during presentation |
-| `tools/sqlcheck.py` | offline proof that the queries and seed match the schema |
+| `tools/sqlcheck.py` | Offline proof that the queries and seed match the schema |
 
-## Status
-
-- [x] Schema, constraints, indexes, views, trigger, stored procedure (`db/`)
-- [x] Deterministic seed data & least-privilege user grants (`db/02_seed.sql`, `db/05_users.sql`)
-- [x] Report query catalog & integrity test suite (`docs/QUERIES.md`, `docs/TESTS.md`)
-- [x] ER diagram specification matching 12 schema entities (authored in ERDPlus)
-- [x] JavaFX POS application — Core models, DAOs, services, UI shell, seat map, checkout, receipts, background hold sweeper, countdown chip & bookings list (Phases 0–6)
-- [x] 100% test coverage across Unit (31), Database Integration (34), and Headless UI (14) suites (79 total tests)

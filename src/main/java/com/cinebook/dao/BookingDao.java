@@ -85,12 +85,19 @@ public final class BookingDao {
                AND status = 'CONFIRMED'
             """;
 
+    /**
+     * {@code FOR UPDATE} is load-bearing: without the row lock a clerk can confirm
+     * one of these holds between this read and the sweep's UPDATE. The UPDATE would
+     * then match nothing, but the ticket delete below would still run and take the
+     * seats out from under a paid booking. The lock makes the re-check below hold.
+     */
     private static final String EXPIRED_HOLD_IDS_SQL = """
             SELECT booking_id
               FROM booking
              WHERE status = 'HELD'
                AND booked_at < ?
              ORDER BY booking_id
+             FOR UPDATE
             """;
 
     private static final String BASE_SELECT_BOOKINGS_SQL = """
@@ -316,24 +323,51 @@ public final class BookingDao {
     }
 
     /**
-     * Searches bookings by customer name, phone number, or booking reference id.
+     * Searches the whole register — not just the page already on screen — by
+     * customer name, phone, show date ({@code yyyy-MM-dd}) or reference
+     * ({@code BK-0042} or {@code 42}). An optional status narrows the result the
+     * same way the filter chips do, so a filter cannot miss older rows that the
+     * first page never loaded.
      */
-    public List<BookingSummary> search(Connection connection, String query, int limit)
-            throws SQLException {
-        if (query == null || query.isBlank()) {
-            return listRecent(connection, limit);
+    public List<BookingSummary> search(Connection connection, String query, BookingStatus status,
+                                       int limit) throws SQLException {
+        String trimmed = query == null ? "" : query.trim();
+        List<Object> arguments = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(BASE_SELECT_BOOKINGS_SQL).append(" WHERE ");
+
+        if (status != null) {
+            sql.append("b.status = ? AND ");
+            arguments.add(status.name());
         }
-        String trimmed = query.trim();
-        String wild = "%" + trimmed + "%";
-        String sql = BASE_SELECT_BOOKINGS_SQL
-                + " WHERE c.full_name LIKE ? OR c.phone LIKE ? OR CAST(b.booking_id AS CHAR) = ? "
-                + GROUP_BY_ORDER_LIMIT;
+        if (trimmed.isEmpty()) {
+            sql.append("1 = 1 ");
+        } else {
+            String wild = likePattern(trimmed);
+            sql.append("(c.full_name LIKE ? ESCAPE '!' OR c.phone LIKE ? ESCAPE '!' ")
+                    .append("OR CAST(st.show_date AS CHAR) LIKE ? ESCAPE '!' ");
+            arguments.add(wild);
+            arguments.add(wild);
+            arguments.add(wild);
+            Integer bookingId = bookingId(trimmed);
+            if (bookingId != null) {
+                sql.append("OR b.booking_id = ? ");
+                arguments.add(bookingId);
+            }
+            sql.append(") ");
+        }
+        sql.append(GROUP_BY_ORDER_LIMIT);
+
         List<BookingSummary> results = new ArrayList<>();
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, wild);
-            statement.setString(2, wild);
-            statement.setString(3, trimmed);
-            statement.setInt(4, limit);
+        try (PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            int index = 1;
+            for (Object argument : arguments) {
+                if (argument instanceof Integer number) {
+                    statement.setInt(index++, number);
+                } else {
+                    statement.setString(index++, (String) argument);
+                }
+            }
+            statement.setInt(index, Math.max(1, limit));
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     results.add(mapBookingSummary(rs));
@@ -341,6 +375,29 @@ public final class BookingDao {
             }
         }
         return results;
+    }
+
+    /** Escapes the LIKE metacharacters so a typed {@code %} or {@code _} is literal. */
+    private static String likePattern(String query) {
+        return "%" + query.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+    }
+
+    /** {@code BK-0042}, {@code #42} or {@code 42} all name the same booking. */
+    private static Integer bookingId(String query) {
+        String digits = query;
+        if (digits.regionMatches(true, 0, "BK-", 0, 3)) {
+            digits = digits.substring(3);
+        } else if (digits.startsWith("#")) {
+            digits = digits.substring(1);
+        }
+        if (digits.isEmpty() || !digits.chars().allMatch(Character::isDigit)) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(digits);
+        } catch (NumberFormatException tooLarge) {
+            return null;
+        }
     }
 
     /**
