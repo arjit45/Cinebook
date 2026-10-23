@@ -17,16 +17,16 @@ are worth more than a name, and what the OOP report has to contain.
 | Inheritance | `StaffUser` → `Administrator`, `BoxOfficeOperator`; `Seat` → `RegularSeat`, `PremiumSeat`, `ReclinerSeat` |
 | Polymorphism | `Payment.renderReceipt()` differs per subclass; `Seat.priceFor(showtime)` differs per class |
 | Abstract class | `StaffUser` with abstract `homeScreen()` and `canManageProgramme()` |
-| Interface | `Repository<T, K>`, `ReportQuery`, `ReceiptWriter` |
-| Generics | `Repository<T extends Identifiable<K>, K>`, `ResultSetMapper<T>` |
+| Interface | `ReportQuery`, with one implementation per report tab |
+| Generics | `FxTasks.run<T>(...)`; typed `List<ReportQuery>` and report result lists |
 | Checked exceptions | `SeatUnavailableException` must be handled at the call site — it drives the UI toast |
-| Collections | `List<Seat>`, `Map<SeatClass, BigDecimal>` for the cart breakdown, `List<ConcessionLine>` |
-| Streams | `ReportService` grouping; `seats.stream().mapToDouble(...)`; `fnbTotal()` as a `BigDecimal` reduction |
+| Collections | `List<Seat>`, `EnumMap<SeatClass, List<Seat>>` for the class breakdown, `List<ConcessionLine>` |
+| Streams | `ProgrammeView` grouping upcoming screenings by date; `seats.stream().mapToDouble(...)`; `fnbTotal()` as a `BigDecimal` reduction |
 | Enums | `SeatClass`, `BookingStatus`, `PaymentMethod`, `Role` |
-| Records | `BookingSummary` (audit-aware projection for bookings search/list), `SeatView`, `RevenueRow`, `ConcessionLine` |
-| Threads | `HoldExpiryDaemon` (`ScheduledExecutorService`) for periodic 60s hold sweeps; `FxTasks` (`Task<T>`) for transactions off the FX thread |
+| Records | `BookingSummary` (audit-aware projection for bookings search/list), `Receipt`, `ConcessionLine`, `ReportTable`, `QueryResult`, `ShiftSummary`, `SqlPreset` |
+| Threads | `HoldExpiryDaemon` (`ScheduledExecutorService`) for periodic 60s hold sweeps; `FxTasks` (`ExecutorService`) for database work off the FX thread |
 | File I/O | `ReceiptWriter` writes the ticket stub to disk |
-| Patterns | Singleton (`Db`), DAO, Factory (`PaymentFactory`), Strategy (`ReportQuery`, one per report tab), Builder (`BookingDraft`), Observer (`ObservableList` selection binding), Template Method (`BaseController.loadAsync`) |
+| Patterns | Singleton (`Db`), DAO, simple factory (`Seat.of`), Strategy (`ReportQuery`, one per report tab), Observer (JavaFX `textProperty`/`valueProperty` listeners) |
 
 Each row is one sentence away from being a paragraph an examiner can check in the code.
 That sentence is what the report needs; the table alone is what the marking scheme gets.
@@ -37,18 +37,19 @@ That sentence is what the report needs; the table alone is what the marking sche
 
 These are the ones usually only *named* in student projects, so have the mechanism ready:
 
-- **Builder, `BookingDraft`.** A sale is assembled from a seat set, a customer, a
-  concession cart and a payment method that arrive in that order from three different
-  screens. `BookingDraft` collects them, and `toBooking()` is the only way out — so a
-  half-built booking cannot reach a DAO.
 - **Strategy, `ReportQuery`.** One implementation per report tab, each carrying its own
-  SQL and its own `ResultSetMapper`. The Reports screen iterates a `List<ReportQuery>`,
-  so adding a tab is a new class plus one line in a registry — and the SQL console's
-  preset list is generated from the same registry, which is why there is no second copy
-  of any query.
-- **Template Method, `BaseController.loadAsync()`.** Load, then render, then handle the
-  failure — the three steps every screen repeats. The screen supplies the query; the
-  base class supplies the background thread, the busy state and the error toast.
+  SQL and its own row mapper. The Reports screen iterates a `List<ReportQuery>`, so adding
+  a tab is a new class plus one line in `ReportCatalog` — and the SQL console's preset
+  list is generated from the same registry, which is why there is no second copy of any
+  tab query.
+- **Simple factory, `Seat.of(...)`.** The `seat_class` enum is mapped to
+  `RegularSeat`/`PremiumSeat`/`ReclinerSeat` in one place. Every caller gets a seat that
+  knows its own `priceFor(showtime)`, so the multiplier never becomes a `switch` in the
+  checkout code.
+- **Singleton, `Db`.** One instance owns a three-connection handoff pool, validates a
+  connection before lending it, and refuses a nested borrow on the same thread. The
+  singleton is the process-wide entry point; the `Handle` is the unit-of-work boundary
+  that returns the connection even when the work throws.
 
 ---
 

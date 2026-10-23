@@ -1,6 +1,6 @@
 # CineBook — Build Plan
 
-Status: System specification & architecture contract (Phases 0–5 implemented and verified).
+Status: System specification & architecture contract (Phases 0–7 implemented and verified).
 
 ---
 
@@ -39,8 +39,7 @@ the Java application, and the contract that joins them.
 ### In
 
 - Staff login with two roles
-- Dashboard: today's screenings and how full they are
-- Browse the schedule by date
+- Schedule: every remaining screening by date, with real occupancy
 - **Seat map with live hold → confirm** (the centrepiece)
 - Checkout: customer lookup or create, three payment methods, a one-click
   concession upsell, receipt
@@ -61,7 +60,9 @@ the Java application, and the contract that joins them.
 
 ## 3. Screens
 
-Seven programmatic JavaFX views and one side panel. Nothing else.
+Seven programmatic JavaFX views and one side panel in the design. Six are in
+the current build; the Dashboard frame remains a planned extension. The role's home
+screen — Reports for an admin, Schedule for an operator — is the landing view.
 
 ```
 ┌──────┬──────────────────────────────────────────────┐
@@ -79,8 +80,8 @@ Seven programmatic JavaFX views and one side panel. Nothing else.
 ```
 
 1. **Login** — staff id + password, role badge. Two seeded accounts.
-2. **Dashboard** — the day's eight screenings as a film strip; each frame is a
-   showtime, its fill bar is real occupancy. Click a frame → seat map.
+2. **Dashboard** *(planned, not in this build)* — the day's eight screenings as a film
+   strip; each frame is a showtime, its fill bar is real occupancy. Click a frame → seat map.
 3. **Schedule** — every remaining day in the programme (the seed holds eight) as a strip
    of small selectable date panels (weekday, day, month, count, `TODAY` tag, riso rule for
    today). The selected panel takes a darker stock and a riso rule, and only that day's
@@ -94,10 +95,9 @@ Seven programmatic JavaFX views and one side panel. Nothing else.
 5. **Bookings** — search by id / customer / date; detail rows including the
    concession lines; cancel action.
 6. **Programme** *(admin)* — movie CRUD and a schedule builder with clash detection.
-7. **Reports** *(admin)* — five report tabs, one per rubric query, plus a SQL console
-   that is read-only by default and can be armed for writes by an admin. The
-   **Shift summary** is a menu item, not a tab: it belongs to closing the till, not
-   to studying the business.
+7. **Reports** *(admin)* — five report tabs, one per rubric query, plus a read-only
+   SQL console. The **Shift summary** is a menu item, not a tab: it belongs to closing
+   the till, not to studying the business.
 
 Checkout is a **side panel** on the seat map, not its own screen — you never lose
 sight of the seats you are selling. The blocks stack in the order the counter
@@ -164,7 +164,7 @@ Rules:
   transaction (see §5).
 - Keyboard: arrow keys move, space selects, Enter holds. Focus ring always visible
   — still to come, because a tab stop per seat makes the page hard to leave today.
-- **The grid is built from the data, never from the FXML.** Rows and columns come
+- **The grid is built from the data, never from a hardcoded layout.** Rows and columns come
   from `MAX(row_label)` and `MAX(seat_no)` for that screen. The seed is 4 screens ×
   8 rows × 12 seats today, but `chk_seat_no` allows 60 per row — a hardcoded 8 × 12
   `GridPane` would silently lose seats the first time somebody adds a row, and the
@@ -176,7 +176,7 @@ Rules:
 
 ### A. Sell a seat (the demo path)
 
-1. Login → Dashboard.
+1. Login → the role's home: Reports for an admin, Schedule for an operator.
 2. Click a screening frame.
 3. Seats load with occupancy (single query, one `LEFT JOIN`).
 4. Click seats → panel totals by class in real time.
@@ -274,17 +274,18 @@ top films, dormant films, occupancy, loyal customers. Sixth tab: a SQL text box 
 a results grid — type anything, see rows. This is what you open when the examiner
 says "show me all films not screened in six months".
 
-The console carries a **preset dropdown**: the thirteen report queries, loaded from one
-resource file into the editor with F5 to run. Same text as `04_queries.sql`, so there
-is one copy of each query and no drift between the handout and the app.
+The console carries a **preset dropdown**: the five tab queries plus eight follow-ups,
+loaded into the editor with F5 to run. The five tabs and their presets come from the
+same query objects, so a tab's SQL cannot drift from the console copy; the follow-ups
+keep the wording of `04_queries.sql`.
 
 ### F. Shift close (Z-report)
 
-One menu item, one query, one screen. For the logged-in clerk and today's date it
-reports: bookings sold, tickets and food taken, refunds paid against bookings *this
-clerk cancelled*, and a split by payment method. `BigDecimal` throughout,
-`groupingBy` for the split — the point is that a till report in `double` is a bug
-waiting for a busy Saturday.
+One menu item, one screen. Two small queries — payments and refunds — report the
+logged-in clerk's day: bookings sold, tickets and food taken, refunds paid against
+bookings *this clerk cancelled*, and a split by payment method. `BigDecimal`
+throughout; the split comes back grouped by the database — the point is that a till
+report in `double` is a bug waiting for a busy Saturday.
 
 Refunds are counted against `cancelled_by_staff_id`, not `sold_by_staff_id`; that is
 the whole reason the column exists.
@@ -296,14 +297,15 @@ the whole reason the column exists.
 ```
 ui/        views, components, css        (no SQL here, ever)
 service/   BookingService, CheckoutService, ProgrammeService, ReportService,
-           AuthService, ScheduleService
-           ↳ owns transactions
-dao/       MovieDao, BookingDao, SeatDao, ShowtimeDao, ...  ↳ owns SQL
-model/     Movie, Screen, Seat, Showtime, Customer, Booking, Ticket
+           AuthService, HoldExpiryDaemon  ↳ owns transactions
+dao/       MovieDao, ScreenDao, SeatDao, ShowtimeDao, CustomerDao, BookingDao,
+           ConcessionDao, ReceiptDao, StaffDao  ↳ owns SQL
+model/     Movie, Screen, Seat, Showtime, Customer, Booking, Ticket,
            StaffUser, ConcessionItem, BookingConcession, enums
 exception/ BookingException → SeatUnavailableException, PaymentFailedException,
            ValidationException, AuthException
-util/      Db (3-connection pool with single-borrow enforcement), ReceiptWriter, Formatters
+util/      Db (3-connection pool with single-borrow enforcement), ReceiptWriter,
+           Money, Passwords
 test/      JUnit 5 — unit, database integration, and headless UI suites
 ```
 
@@ -691,7 +693,7 @@ Four rules, and every bug that crosses the boundary breaks one of them:
 1. **`db/00_setup.sql` is the only source of schema truth.** The app never runs DDL.
 2. **The app connects as `cinebook_app`**, never as root.
 3. **Services own transactions. DAOs are stateless.** Nothing else calls `commit()`.
-4. **Controllers contain no SQL.** If a controller imports `java.sql`, it is wrong.
+4. **Views contain no SQL.** If anything in `ui/` imports `java.sql`, it is wrong.
 
 ### 11.2 Connection
 
@@ -753,22 +755,21 @@ messages. It is the single clearest proof that the two halves are designed toget
 | `movie` | `Movie` | `MovieDao` | Programme, Schedule |
 | `screen` | `Screen` | `ScreenDao` | Schedule, Programme |
 | `seat` | `Seat` + subclasses | `SeatDao` | Seat Map |
-| `showtime` | `Showtime` | `ShowtimeDao` | Schedule, Dashboard |
+| `showtime` | `Showtime` | `ShowtimeDao` | Schedule, Programme |
 | `customer` | `Customer` | `CustomerDao` | Checkout |
 | `booking` | `Booking` | `BookingDao` | Checkout, Bookings |
-| `ticket` | `Ticket` | `TicketDao` | Seat Map, Bookings |
-| `payment` | `Payment` + subclasses | `PaymentDao` | Checkout |
-| `booking_audit` | `AuditEntry` | `AuditDao` | Reports |
+| `ticket` | `Ticket` | `BookingDao` (writes), `SeatDao` (availability) | Seat Map, Bookings |
+| `payment` | `Payment` + subclasses | `BookingDao` (procedure), `ReceiptDao` (read) | Checkout |
+| `booking_audit` | `AuditEntry` | — (written by the database trigger) | — |
 | `staff_user` | `StaffUser` + subclasses | `StaffDao` | Login |
 | `concession_item` | `ConcessionItem` | `ConcessionDao` | Checkout, Reports |
 | `booking_concession` | `BookingConcession` | `ConcessionDao` | Checkout, Bookings |
 
 ### 11.6 One query, two audiences
 
-The report queries and the app queries are the same queries. The difference is only
-`?` placeholders: `04_queries.sql` hardcodes dates for the report, `ReportService`
-passes them as parameters. This establishes complete consistency between reporting
-and transactional systems.
+The five report tabs use the same `CURDATE()` windows as `04_queries.sql`. The
+shift summary is the parameterised case: it binds the signed-in clerk and the selected
+date, so the same query serves every till without hardcoding an id.
 
 ### 11.7 Threading and Connection Concurrency
 
@@ -800,9 +801,9 @@ Three critical concurrency rules govern the architecture:
 
 ### 11.8 Administrative DML and Engine-Level Verification
 
-The internal console is a reporting tool, not an open administrative terminal. Default mode accepts
-`SELECT` · `SHOW` · `EXPLAIN` · `DESCRIBE` only; an admin can arm write mode through a deliberate
-two-step toggle.
+The internal console is a reporting tool, not an open administrative terminal. It accepts
+`SELECT` · `SHOW` · `EXPLAIN` · `DESCRIBE` only. Writes are not armed from the UI — they stay in
+MySQL Workbench, deliberately, so no toggle can turn the reporting console into a mutation tool.
 
 To demonstrate schema-level integrity enforcement (such as `ERROR 1062` on duplicate bookings, or
 automatic `booking_audit` trigger rows upon status change), statements can also be executed directly
@@ -818,7 +819,7 @@ Re-running `db/00_setup.sql` rebuilds and re-seeds the entire database determini
 The system deliverables are structured and validated across two complementary tracks:
 
 1. **RDBMS Track:** Verified through clean execution of `00_setup.sql`, least-privilege enforcement in `db/05_users.sql`, the fingerprinted query catalogue (`docs/QUERIES.md`), data dictionary (`docs/SCHEMA.md`), and the database integrity test log (`docs/TESTS.md`).
-2. **Java OOP Track:** Verified through the pure unit suite (`mvn test`, 31 tests without database), database integration suite (`mvn test -Dgroups=db`, 29 tests with connection pool validation), and headless UI suite (`mvn test -Dgroups=ui`, 14 tests driving real JavaFX controls).
+2. **Java OOP Track:** Verified through the pure unit suite (`mvn test`, 40 tests without database), database integration suite (`mvn test -Dgroups=db`, 51 tests with connection pool validation), and headless UI suite (`mvn test -Dgroups=ui`, 24 tests driving real JavaFX controls).
 
 ---
 
@@ -1030,6 +1031,8 @@ tested instantly; only `BookingService` waits for a database.
 | `HoldExpiryDaemon` | `db` | background hold maintenance | daemon starts and stops cleanly; sweeps expired holds without clerk attribution |
 | `ProgrammeService` | `db` | the admin surface and the database's scheduling keys | add / read / update / delete; a film with screenings cannot be deleted; a taken slot returns the screen and time; past slots and short runtimes are refused; an operator cannot read the catalogue |
 | `ProgrammeView` | `ui` | the seam between the form and those rules | catalogue and every upcoming screening drawn; **New film** opens and **Cancel** closes the form; a taken slot shows the refusal and adds no row |
+| `ReportService` | `db` | the admin gate, the read-only console and the Z-report's own-clerk scope | five tabs return their columns and rows; revenue matches the confirmed bookings in the window; the top three are ordered; occupancy is descending; a DELETE is refused; the shift summary matches a direct aggregate of the clerk's payments and refunds; an operator is refused |
+| `ReportsView` | `ui` | the tabs, the console and the shift-summary menu item | five report tabs and the console draw; occupancy replaces the sheet; a preset fills the editor and runs; a DELETE is refused without rows; the Z-report opens and returns to the report |
 
 The **price snapshot** gets its own test, because it is the invariant every report
 depends on: add a line at today's price, change `concession_item.unit_price`, and the
@@ -1037,12 +1040,12 @@ depends on: add a line at today's price, change `concession_item.unit_price`, an
 `showtime.base_price` after a hold and `ticket.price` must not move either. A snapshot
 that can be disturbed by an unrelated `UPDATE` is just a copy.
 
-Nine areas, 92 tests across the three groups (31 unit, 43 database, 18 UI). Credible,
+Eleven areas, 115 tests across the three groups (40 unit, 51 database, 24 UI). Credible,
 without becoming the project.
 
 ### 14.3 What is deliberately not unit tested
 
-- **UI Views.** Anything worth testing is moved into a service first; visual layout and end-to-end flows are covered by the headless UI test suites (`LoginFlowTest`, `ProgrammeViewTest`).
+- **UI Views.** Anything worth testing is moved into a service first; visual layout and end-to-end flows are covered by the headless UI test suites (`LoginFlowTest`, `ProgrammeViewTest`, `ReportsViewTest`).
 - **Database constraints.** Constraint enforcement is proved by the database integration tests (`DbSmokeTest`, `BookingServiceTest`, `ScheduleDaoTest`, `ProgrammeServiceTest`) and the SQL integrity test log in `docs/TESTS.md`.
 - **Report output.** Verified by running the queries and comparing against the fingerprinted output in `docs/QUERIES.md`.
 
@@ -1068,12 +1071,12 @@ the code or the schema — not a policy, and not a promise.
 | Threat | Control | Where it lives |
 |---|---|---|
 | SQL injection | `PreparedStatement` for every statement, including the SQL console. No concatenation in any DAO — not even for an `ORDER BY`: the sort column is looked up in a `Map` of allowed values, so the text box can never reach the query string | `dao/` |
-| Privilege escalation | **Role checked in the service layer, not the UI.** Hiding the Programme button is not authorization: `AuthService.requireAdmin()` throws `AuthException`, and every admin entry point calls it before the first query. A hand-built call to `ScheduleService.addShowtime()` from an operator session fails whether or not a button exists | `AuthService.requireAdmin()` |
+| Privilege escalation | **Role checked in the service layer, not the UI.** Hiding the Programme button is not authorization: `AuthService.requireAdmin()` throws `AuthException`, and every admin entry point calls it before the first query. A hand-built call to `ProgrammeService.addScreening()` from an operator session fails whether or not a button exists | `AuthService.requireAdmin()` |
 | Credential theft | Salted SHA-256 per user, salt stored beside the hash. The hash is never selected into a DTO, never logged, and `StaffUser.toString()` prints the username only | `staff_user` |
 | Over-privileged app | `cinebook_app` gets DML on `cinebook.*` plus `EXECUTE` on one procedure: no DDL, no `GRANT OPTION`, no `CREATE ROUTINE`, no `TRIGGER` | `db/05_users.sql` |
 | Secret leakage | `app.properties` gitignored; `app.properties.example` committed with every value blank | `.gitignore` |
 | Information disclosure | No stack traces and no SQL text in the UI. The log line carries the booking id and the MySQL error code — never the customer's name, phone or email | `FxTasks` |
-| Destructive keystroke | The SQL console is read-only by default (`SELECT`, `SHOW`, `EXPLAIN`, `DESCRIBE`); DML happens in Workbench, deliberately | `SqlConsoleController` |
+| Destructive keystroke | The SQL console is read-only (`SELECT`, `SHOW`, `EXPLAIN`, `DESCRIBE`); DML happens in Workbench, deliberately | `SqlGuard`, `ReportsView` |
 | Card data | Never stored and never asked for. `payment` holds method, amount and `txn_ref` — there is no column a card number could sit in, so there is nothing to leak | schema |
 | MySQL exposure | Bound to loopback for the demo; documented as a host-level recommendation below, **not performed by this project** | note below |
 
@@ -1176,7 +1179,7 @@ help from anyone. The indexes worth defending are the ones the reports actually 
 
 | Index | Why it exists |
 |---|---|
-| `idx_showtime_date` | every schedule and dashboard query filters on `show_date` |
+| `idx_showtime_date` | every schedule query filters on `show_date` |
 | `idx_booking_status` | the expiry job scans `HELD`; reports filter `CONFIRMED` |
 | `idx_payment_paid` | the shift report filters `DATE(paid_at) = CURDATE()` |
 | `idx_booking_sold_by`, `idx_booking_cancelled_by` | per-clerk reconciliation joins on both |

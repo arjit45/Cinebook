@@ -107,7 +107,7 @@ class BookingServiceTest {
                 assertTrue(row.next(), "the hold must exist");
                 assertEquals("HELD", row.getString("status"));
                 assertEquals(walkIn, row.getInt("customer_id"),
-                        "phase 4 holds under the walk-in guest");
+                        "a hold starts under the walk-in guest");
                 assertEquals(operator.staffId(), row.getInt("sold_by_staff_id"));
                 assertEquals(0, held.total().compareTo(row.getBigDecimal("ticket_amount")));
                 assertEquals(0, BigDecimal.ZERO.compareTo(row.getBigDecimal("fnb_amount")));

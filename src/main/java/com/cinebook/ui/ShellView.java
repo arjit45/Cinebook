@@ -75,7 +75,9 @@ public final class ShellView {
         this.user = user;
         this.onSignOut = onSignOut;
         build();
-        select("Schedule");
+        // The role decides the landing screen; the rail only offers the sections it
+        // can reach. Administrator.homeScreen() is Reports, operator is Schedule.
+        select(user.homeScreen());
     }
 
     public Parent root() {
@@ -181,6 +183,9 @@ public final class ShellView {
         } else if (section.equals("Programme")) {
             meta.setText("Film catalogue and screening schedule");
             body.getChildren().add(new ProgrammeView(auth).root());
+        } else if (section.equals("Reports")) {
+            meta.setText("Five reports, the SQL console and the shift summary");
+            body.getChildren().add(new ReportsView(auth).root());
         } else {
             meta.setText(TODAY.format(LocalDate.now()));
             Label empty = new Label("Nothing to show here yet.");

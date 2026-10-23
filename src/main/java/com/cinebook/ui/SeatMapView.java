@@ -61,8 +61,8 @@ import java.util.stream.Collectors;
  * armchair — the shape does the work even when the page is printed grey.
  *
  * <p>State is the only strong signal: a free seat is cream, a sold one is faded
- * with an ×, and a picked one turns green. Picking is a preview for phase 4, not
- * a hold: nothing is written until the transaction lands.
+ * with an ×, and a picked one turns green. Picking is a preview until Confirm;
+ * nothing is written until the hold transaction commits.
  *
  * <p>Sections, rows and columns all come from the data. The seed is 12 seats per
  * row, but {@code chk_seat_no} allows 60, so a typed 8 × 12 grid would silently
@@ -360,8 +360,8 @@ public final class SeatMapView {
         button.setTooltip(new Tooltip(seat.label() + " \u00b7 " + pretty(seat.seatClass())
                 + " \u00b7 " + seat.priceFor(showtime).toPlainString()
                 + (isSold ? " \u00b7 sold" : " \u00b7 available")));
-        // Keyboard travel through 96 seats is phase 4's job; offering every seat as a
-        // tab stop today would only make the screen harder to leave.
+        // Keyboard travel through 96 seats is not implemented; offering every seat as
+        // a tab stop would only make the screen harder to leave.
         button.setFocusTraversable(false);
         button.setOnAction(event -> pick(seat, isSold, button));
         seatButtons.put(seat, button);
@@ -403,9 +403,9 @@ public final class SeatMapView {
      * add up to in the middle, the bill and the confirm action on the right. It spans
      * the window, so the total is in view while the seating scrolls.
      *
-     * <p>Confirm is disabled on purpose: pressing it would promise a hold that phase 4
-     * has not built. The bar reports real picks and real prices today; enabling the
-     * button is the only change the hold transaction needs here.
+     * <p>Confirm writes one HELD booking for the picked seats. It stays disabled while
+     * the bill is empty and after a hold exists, so the bar never promises a second
+     * transaction against the same seats.
      */
     private HBox bookingBar() {
         selectedSeats.getStyleClass().add("seat-tally");
@@ -561,7 +561,7 @@ public final class SeatMapView {
 
     /**
      * A pick is a preview, not a hold: the seat turns green and the footer adds it to
-     * the bill, so phase 4 only has to add the transaction behind Confirm.
+     * the bill. Nothing reaches the database until Confirm runs {@link #holdSeats()}.
      */
     private void pick(Seat seat, boolean isSold, Button button) {
         status.getStyleClass().remove("error");

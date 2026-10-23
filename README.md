@@ -27,14 +27,14 @@ Designed to eliminate common ticketing bottlenecks, CineBook guarantees zero sea
   Add snacks and drinks directly to tickets in a single checkout flow. Item prices and ticket amounts are snapshotted on the booking row at the moment of sale, ensuring future catalog price changes never alter historical till receipts.
 
 - **Refund-Aware Cancellations & Shift Auditing**  
-  Automated refund calculation enforced by database check constraints:
+  Refunds follow the 90 / 50 ticket rule; database check constraints cap them at the ticket amount and keep food non-refundable:
   - **Early (> 2 hrs before show)**: 90% ticket refund.
   - **Late (≤ 2 hrs before show)**: 50% ticket refund.
   - **Started Screening**: Cancellation locked. Food & concessions are non-refundable.  
   Every sale and cancellation records both the selling clerk (`sold_by`) and refunding clerk (`cancelled_by`) for accurate end-of-day Z-reports.
 
 - **Thermal Receipt Generator**  
-  Built-in ESC/POS receipt engine formats 40-column thermal slips (`receipts/BK-XXXX.txt`) with itemized ticket and food breakdowns, tax summaries, and clerk metadata.
+  Writes 40-column plain-text thermal slips (`receipts/BK-XXXX.txt`) with itemized ticket and food breakdowns, the payment method, and the transaction reference.
 
 ---
 
@@ -45,7 +45,7 @@ CineBook strictly separates concerns across four decoupled layers:
 ```
 ┌────────────────────────────────────────────────────────┐
 │  Presentation Layer (JavaFX 21 · com.cinebook.ui)       │
-│  Controllers, CSS styles, FxTasks non-blocking async   │
+│  Programmatic views, CSS styles, FxTasks async work    │
 └──────────────────────────┬─────────────────────────────┘
                            │ calls
 ┌──────────────────────────▼─────────────────────────────┐
@@ -64,7 +64,7 @@ CineBook strictly separates concerns across four decoupled layers:
 └────────────────────────────────────────────────────────┘
 ```
 
-- **UI (`com.cinebook.ui`)**: Dark-slate cinematic styling with zero SQL or database dependencies. Long queries run off the JavaFX thread via `FxTasks.run` to keep UI animations smooth.
+- **UI (`com.cinebook.ui`)**: Paper-and-house-lights styling with zero SQL or database dependencies. Long queries run off the JavaFX thread via `FxTasks.run` so the window never freezes.
 - **Service (`com.cinebook.service`)**: Owns transactions, business rules, and background tasks (`AuthService`, `BookingService`, `CheckoutService`, `HoldExpiryDaemon`).
 - **DAO (`com.cinebook.dao`)**: Parameterized PreparedStatements eliminate SQL injection risks.
 - **Database (`MySQL 8.0`)**: 12 normalized tables in 3NF/BCNF, foreign key cascades/restricts, integrity triggers, and reporting views.
@@ -122,7 +122,7 @@ is gitignored. Copy `app.properties.example` to `app.properties` and fill it in.
 three grant lines: `USAGE ON *.*` (MySQL's "no rights here" placeholder), DML on
 `cinebook.*`, and `EXECUTE` on `sp_confirm_booking` — nothing else. The account is
 tested against DDL, other schemas and `GRANT`; the transcript is in
-[docs/PRD.md §10.3](docs/PRD.md#L593).
+[docs/PRD.md §10.3](docs/PRD.md#103-privileges-db05_userssql).
 
 > ⚠️ `00_setup.sql` starts with `DROP DATABASE IF EXISTS cinebook`. It is meant to be re-run whenever you want a clean rebuild — never point it at a database you care about. It does not touch the application's MySQL account, which is why `05_users.sql` is separate.
 
@@ -166,15 +166,16 @@ No JavaFX install is required: the dependencies come from Maven.
 ```bash
 mvn -q test               # unit tests — no database, no server
 mvn test -Dgroups=db      # integration tests — MySQL must be running
-mvn test -Dgroups=ui      # sign-in flow through the real controls — needs a display
+mvn test -Dgroups=ui      # UI flows through the real controls — needs a display
 ```
 
-`mvn test` runs 31 unit tests in well under a second and opens no socket: the refund
+`mvn test` runs 40 unit tests in well under a second and opens no socket: the refund
 boundary at ±1 minute, the three seat multipliers, the booking state machine, the price
-snapshots, the contact rules and the 40-column receipt. They pass with MySQL stopped, which is
-the only way they stay useful ([docs/PRD.md §14.1](docs/PRD.md#L972)).
+snapshots, the contact rules, the 40-column receipt, the SQL console's read-only guard and
+the report registry's tab/preset parity. They pass with MySQL stopped, which is the only
+way they stay useful ([docs/PRD.md §14.1](docs/PRD.md#141-the-rule-that-keeps-tests-honest)).
 
-`mvn test -Dgroups=db` runs 43 integration tests and does need a running server:
+`mvn test -Dgroups=db` runs 51 integration tests and does need a running server:
 the config file, the `cinebook_app` login, the seeded 300 bookings, the
 `BigDecimal`/`LocalDate`/`LocalTime` mapping and the `serverTimezone` pin, the schedule
 and seat DAOs — row order, the 96-seat auditorium, and a cross-check that
@@ -186,8 +187,10 @@ refused second payment, replacing walk-in with named customer), plus hold-expiry
 refund-aware cancellations (90% early vs 50% late), refused cancellations for past screenings,
 bookings search and audit projections, hold-expiry daemon lifecycle, and the Programme
 service's film CRUD, guarded delete, screening insert, double-booked slot message and
-admin gate. The pom excludes that group by default, so the quick suite never waits on
-MySQL.
+admin gate. The Reports service checks the five rubric queries against the seed, the
+console's read-only guard, and the shift summary against a direct aggregate of the same
+clerk's payments and refunds. The pom excludes that group by default, so the quick suite
+never waits on MySQL.
 
 `mvn test -Dgroups=ui` drives `LoginView` the way a person does: type into the two
 fields, press **Sign in**, read what the window says next. It proves the seam the unit
@@ -203,10 +206,12 @@ printer, that **Release seats** closes the panel and hands the seat back — and
 refused in the footer when another till already paid for that hold, leaving every
 control usable — that paying shows a slip read back from the database, and that the
 Bookings screen searches the whole register by printed reference and cancels a paid
-booking with a refund, and that the Programme screen draws the catalogue and every
-upcoming screening, opens the film form on **New film**, closes it on **Cancel**, and
-turns a taken slot into the screen-and-time refusal without adding a row. Eighteen tests,
-about fifteen seconds, a display required.
+booking with a refund, that the Programme screen draws the catalogue and every upcoming
+screening, opens the film form on **New film**, closes it on **Cancel**, and turns a
+taken slot into the screen-and-time refusal without adding a row, and that the Reports
+screen opens from the admin rail, switches to occupancy, loads a console preset, runs a
+read query, refuses a DELETE without leaving rows behind, and opens and closes the shift
+summary. Twenty-four tests, about twenty seconds, a display required.
 
 ### Running the app
 
@@ -215,8 +220,8 @@ mvn javafx:run
 ```
 
 Sign in with one of the two seeded accounts: `operator / operator123` (lands on Schedule) or
-`admin / admin123` (same schedule, plus Bookings, Programme and Reports in the rail). Those are the
-passwords whose hashes `db/02_seed.sql` stores — the app never knows them in plain text.
+`admin / admin123` (lands on Reports, with Schedule, Bookings and Programme in the rail). Those are
+the passwords whose hashes `db/02_seed.sql` stores — the app never knows them in plain text.
 
 Pick a date panel, then press any screening to open the seat map: an ivory sheet with a
 turquoise screen, one ruled band per class, cream seats and armchairs numbered in
@@ -246,6 +251,16 @@ taken slot is rejected by `UNIQUE (screen_id, show_date, start_time)` and reads
 "Audi 2 already has a show at 19:00." Under the builder, the day book lists every
 upcoming screening grouped by date with seats sold against capacity.
 
+**Reports** opens on Revenue by screen: bookings and money per auditorium over the last
+30 days, with ticket and food money kept apart. **Top films** is the top three by total
+take, **Dormant films** is the six-month absence list, **Occupancy** is the ten fullest
+remaining screenings, and **Loyal customers** is the HAVING report. The **SQL
+console** loads any of the thirteen preset queries into a monospaced editor; F5 or
+**Run query** returns a grid whose columns come from the result, and the console refuses
+anything outside SELECT, SHOW, EXPLAIN and DESCRIBE. **Shift summary** sits beside the
+tabs, not in them: it opens the signed-in clerk's Z-report — bookings, ticket and food
+take, the payment split, and refunds counted against the clerk who cancelled.
+
 The window needs 1280 × 720 at minimum. Renders of the current build are in
 `docs/screens/`: `ui-login.png`, `ui-shell-operator.png`, `ui-seatmap.png`,
 `ui-checkout.png` (the held seats and the food grid), `ui-checkout-payment.png` (the
@@ -265,12 +280,12 @@ first screening's seat map from the `seat` rows to show the map is built from da
 from a hardcoded 8 × 12 grid. On Windows use `;` between classpath entries; on
 macOS/Linux use `:`.
 
-### Logging into the app (once `src/` exists)
+### Logging into the app
 
 | Username | Password | Role |
 |---|---|---|
-| `admin` | `admin123` | ADMIN — programme and reports |
-| `operator` | `operator123` | OPERATOR — sell, cancel, close the shift |
+| `admin` | `admin123` | ADMIN — programme, reports and shift summary |
+| `operator` | `operator123` | OPERATOR — sell and cancel |
 
 Demo credentials, hashed with a per-user salt in the seed. The seed file contains the
 hashes, not the passwords.

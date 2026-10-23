@@ -364,7 +364,7 @@ def domain():
         f'<text x="30" y="{H - 34}" font-family="{FONT}" font-size="11" fill="{MUTED}">'
         f'Multiplicity is shown at each end of an association. Enumerations are declared '
         f'on the right; every enum lives in com.cinebook.model.enums. '
-        f'BookingDraft (Builder) and PaymentFactory are omitted for clarity.</text>'
+        f'Receipt and BookingSummary projections are omitted for clarity.</text>'
     )
     body.append(
         f'<text x="30" y="{H - 14}" font-family="{FONT}" font-size="11" fill="{MUTED}">'
@@ -408,15 +408,15 @@ def layers():
                     "diagram 2 of 2 \u00b7 who may talk to whom", W), DEFS]
 
     parts.append(layer(60, 90, 1280, 140, "Presentation  \u00b7  com.cinebook.ui",
-                       ["LoginController   DashboardController   ScheduleController   "
-                        "SeatMapController   CheckoutController   BookingsController   "
-                        "ReportsController",
-                        "FXML views + one stylesheet. No SQL, no java.sql import, "
-                        "no Connection."],
+                       ["LoginView   ShellView   SeatMapView   BookingsView",
+                        "ProgrammeView   ReportsView   CheckoutPanel (side panel)",
+                        "Programmatic JavaFX views + one stylesheet. No SQL, no java.sql "
+                        "import, no Connection."],
                        "depends on services only"))
 
     parts.append(layer(60, 270, 800, 140, "Service  \u00b7  com.cinebook.service",
-                       ["BookingService    ScheduleService    AuthService    ReportService",
+                       ["BookingService   CheckoutService   ProgrammeService   ReportService",
+                        "AuthService   HoldExpiryDaemon",
                         "The only layer that opens, commits or rolls back a transaction.",
                         "BookingService records soldBy / cancelledBy \u2014 a refund never "
                         "includes food."],
@@ -429,18 +429,15 @@ def layers():
                        "Strategy pattern"))
 
     parts.append(layer(60, 450, 1280, 150, "Data access  \u00b7  com.cinebook.dao",
-                       ["\u00abinterface\u00bb Repository<T extends Identifiable<K>, K>"
-                        "   \u2014 findAll \u00b7 findById \u00b7 save \u00b7 update \u00b7 delete",
-                        "MovieDao   ScreenDao   SeatDao   ShowtimeDao   CustomerDao   "
-                        "BookingDao   TicketDao   PaymentDao   StaffDao   AuditDao   "
-                        "ConcessionDao",
+                       ["MovieDao   ScreenDao   SeatDao   ShowtimeDao   CustomerDao   "
+                        "BookingDao   ConcessionDao   ReceiptDao   StaffDao",
                         "Stateless. Owns the SQL. PreparedStatement only \u2014 never "
                         "string concatenation."],
                        "one DAO per aggregate"))
 
     parts.append(layer(60, 640, 380, 130, "Infrastructure  \u00b7  com.cinebook.util",
                        ["Db (singleton, DriverManager)", "ReceiptWriter (file I/O)",
-                        "Formatters (money, dates)"]))
+                        "Money  \u00b7  Passwords"]))
 
     parts.append(layer(480, 640, 340, 130, "Exceptions  \u00b7  com.cinebook.exception",
                        ["BookingException (checked)",
@@ -464,9 +461,6 @@ def layers():
             f'font-size="10.5" fill="{MUTED}">{esc(label)}</text>'
         )
 
-    # DAO implements Repository
-    parts.append(path([(700, 450), (700, 425), (700, 410)], marker_end="tri",
-                      dashed=True))
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" '
             f'viewBox="0 0 {W} {H}">\n<rect width="{W}" height="{H}" fill="white"/>\n'
             + "\n".join(parts) + "\n</svg>\n")

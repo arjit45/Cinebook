@@ -1014,3 +1014,263 @@
 .date-picker .arrow-button .arrow {
     -fx-background-color: #6E6A5F;
 }
+
+/*
+  Reports (docs/PRD.md §3 screen 7). A ledger, not a dashboard: an index of
+  ruled tabs, one full-width sheet, and numbers on the right. The only large
+  figure is the shift's net, because closing the till is one number before it
+  is a table. No cards inside cards and no shadows.
+*/
+.report-toolbar {
+    -fx-padding: 0 0 0 0;
+    -fx-border-color: transparent transparent #D9D5C9 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.button.report-tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent transparent transparent transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-text-fill: #5F5B52;
+    -fx-font-size: 12px;
+    -fx-font-weight: 400;
+    -fx-padding: 8 14 10 0;
+    -fx-cursor: hand;
+}
+
+.button.report-tab:hover {
+    -fx-background-color: transparent;
+    -fx-text-fill: #D8412F;
+}
+
+.button.report-tab.selected {
+    -fx-border-color: transparent transparent #D8412F transparent;
+    -fx-text-fill: #16181C;
+    -fx-font-weight: 600;
+}
+
+.menu-button.shift-menu {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 4;
+    -fx-border-color: #16181C;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-padding: 7 12 7 12;
+    -fx-font-size: 11px;
+    -fx-text-fill: #16181C;
+}
+
+.menu-button.shift-menu:hover {
+    -fx-background-color: #E0DDD3;
+}
+
+.menu-button.shift-menu .label {
+    -fx-text-fill: #16181C;
+}
+
+.menu-button.shift-menu .arrow {
+    -fx-background-color: #6E6A5F;
+}
+
+.context-menu {
+    -fx-background-color: #F4EFE2;
+    -fx-border-color: #D9D5C9;
+    -fx-border-width: 1;
+    -fx-padding: 4 0 4 0;
+}
+
+.menu-item .label {
+    -fx-text-fill: #16181C;
+    -fx-font-size: 12px;
+}
+
+.menu-item:focused {
+    -fx-background-color: #E0DDD3;
+}
+
+.report-sheet {
+    -fx-padding: 10 0 0 0;
+}
+
+.report-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #16181C;
+}
+
+.report-question {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6E6A5F;
+}
+
+.report-status {
+    -fx-font-size: 11px;
+    -fx-text-fill: #8C8B84;
+}
+
+.report-status.error {
+    -fx-text-fill: #B23B2A;
+}
+
+.report-hint {
+    -fx-font-size: 10.5px;
+    -fx-text-fill: #8C8B84;
+}
+
+.report-section-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #5F5B52;
+    -fx-padding: 10 0 2 0;
+}
+
+.report-table {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: #D9D5C9 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-table-cell-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.report-table .column-header-background {
+    -fx-background-color: transparent;
+}
+
+.report-table .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #D9D5C9 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-size: 34px;
+}
+
+.report-table .column-header .label {
+    -fx-text-fill: #8C8B84;
+    -fx-font-size: 10.5px;
+    -fx-font-weight: 600;
+    -fx-alignment: CENTER-LEFT;
+    -fx-padding: 0 12 0 0;
+}
+
+.report-table .column-header.report-number-column .label {
+    -fx-alignment: CENTER-RIGHT;
+}
+
+.report-table .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #E0D9C8 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-cell-size: 38px;
+}
+
+.report-table .table-row-cell:odd {
+    -fx-background-color: rgba(244, 239, 226, 0.42);
+}
+
+.report-table .table-row-cell:selected {
+    -fx-background-color: #D9D5C9;
+}
+
+.report-table .table-cell {
+    -fx-border-color: transparent;
+    -fx-text-fill: #16181C;
+    -fx-font-size: 12px;
+    -fx-padding: 0 12 0 0;
+    -fx-alignment: CENTER-LEFT;
+}
+
+.report-table .report-number-cell {
+    -fx-alignment: CENTER-RIGHT;
+    -fx-font-weight: 600;
+}
+
+.report-table .filler {
+    -fx-background-color: transparent;
+}
+
+.report-table .placeholder .label {
+    -fx-text-fill: #8C8B84;
+    -fx-font-size: 12px;
+}
+
+.report-empty {
+    -fx-padding: 22 0 22 0;
+    -fx-text-fill: #8C8B84;
+}
+
+.sql-toolbar {
+    -fx-padding: 2 0 0 0;
+}
+
+.sql-editor {
+    -fx-font-family: "Monospaced";
+    -fx-font-size: 11.5px;
+    -fx-background-color: #FBF7EC;
+    -fx-background-insets: 0;
+    -fx-border-color: #E0D9C8;
+    -fx-border-width: 1;
+    -fx-text-fill: #16181C;
+}
+
+.sql-editor .content {
+    -fx-background-color: #FBF7EC;
+    -fx-background-radius: 0;
+}
+
+.sql-editor .scroll-pane,
+.sql-editor .scroll-pane .viewport {
+    -fx-background-color: #FBF7EC;
+}
+
+.shift-sheet {
+    -fx-padding: 12 0 0 0;
+}
+
+.shift-who {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6E6A5F;
+}
+
+.shift-caption {
+    -fx-font-size: 10.5px;
+    -fx-text-fill: #8C8B84;
+}
+
+.shift-net {
+    -fx-padding: 8 0 0 0;
+}
+
+.shift-total {
+    -fx-font-size: 38px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #14615C;
+}
+
+.shift-metrics {
+    -fx-padding: 8 0 0 0;
+}
+
+.shift-metric {
+    -fx-font-size: 17px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #16181C;
+}
+
+.shift-methods {
+    -fx-border-color: #D9D5C9 transparent #D9D5C9 transparent;
+    -fx-border-width: 1 0 1 0;
+}
+
+.shift-method-header,
+.shift-method-row {
+    -fx-padding: 7 0 7 0;
+    -fx-border-color: transparent transparent #E0D9C8 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.shift-method-value {
+    -fx-font-size: 12px;
+    -fx-text-fill: #16181C;
+}

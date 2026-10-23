@@ -39,8 +39,8 @@ import java.util.Set;
  *
  * <p>Customer: the seeded counter guest. The design chooses the buyer in the
  * checkout panel after the hold, and {@code booking.customer_id} is NOT NULL, so
- * phase 4 holds under the walk-in row; phase 5 can reassign that id before payment
- * with one UPDATE.
+ * the hold starts under the walk-in row; {@code CheckoutService.assignCustomer}
+ * reassigns that id with one UPDATE before payment.
  */
 public final class BookingService {
 
