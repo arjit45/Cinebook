@@ -174,7 +174,7 @@ boundary at ±1 minute, the three seat multipliers, the booking state machine, t
 snapshots, the contact rules and the 40-column receipt. They pass with MySQL stopped, which is
 the only way they stay useful ([docs/PRD.md §14.1](docs/PRD.md#L972)).
 
-`mvn test -Dgroups=db` runs 35 integration tests and does need a running server:
+`mvn test -Dgroups=db` runs 43 integration tests and does need a running server:
 the config file, the `cinebook_app` login, the seeded 300 bookings, the
 `BigDecimal`/`LocalDate`/`LocalTime` mapping and the `serverTimezone` pin, the schedule
 and seat DAOs — row order, the 96-seat auditorium, and a cross-check that
@@ -184,8 +184,10 @@ hold and deletes its tickets, the three-connection handoff including its refusal
 nested borrow, the four checkout cases (payment row and receipt totals, price snapshot,
 refused second payment, replacing walk-in with named customer), plus hold-expiry sweeps,
 refund-aware cancellations (90% early vs 50% late), refused cancellations for past screenings,
-bookings search and audit projections, and hold-expiry daemon lifecycle. The pom excludes
-that group by default, so the quick suite never waits on MySQL.
+bookings search and audit projections, hold-expiry daemon lifecycle, and the Programme
+service's film CRUD, guarded delete, screening insert, double-booked slot message and
+admin gate. The pom excludes that group by default, so the quick suite never waits on
+MySQL.
 
 `mvn test -Dgroups=ui` drives `LoginView` the way a person does: type into the two
 fields, press **Sign in**, read what the window says next. It proves the seam the unit
@@ -201,7 +203,10 @@ printer, that **Release seats** closes the panel and hands the seat back — and
 refused in the footer when another till already paid for that hold, leaving every
 control usable — that paying shows a slip read back from the database, and that the
 Bookings screen searches the whole register by printed reference and cancels a paid
-booking with a refund. Fifteen tests, about ten seconds, a display required.
+booking with a refund, and that the Programme screen draws the catalogue and every
+upcoming screening, opens the film form on **New film**, closes it on **Cancel**, and
+turns a taken slot into the screen-and-time refusal without adding a row. Eighteen tests,
+about fifteen seconds, a display required.
 
 ### Running the app
 
@@ -233,6 +238,13 @@ rows, sliding it up as the form goes. **Print receipt** writes `receipts/BK-0042
 40-column thermal text, and **Open receipt** hands it to the desktop (falling back to
 `~/CineBook/receipts` if the working directory is not writable). A 25% premium or a menu
 price change after the sale cannot restate it: tickets and food carry their own snapshot.
+
+As admin, **Programme** is the two-page repertory sheet: the film catalogue on the left
+with **New film**, **Edit** and a delete that refuses any film that still has screenings;
+the screening builder on the right with film, auditorium, date, time and base price. A
+taken slot is rejected by `UNIQUE (screen_id, show_date, start_time)` and reads
+"Audi 2 already has a show at 19:00." Under the builder, the day book lists every
+upcoming screening grouped by date with seats sold against capacity.
 
 The window needs 1280 × 720 at minimum. Renders of the current build are in
 `docs/screens/`: `ui-login.png`, `ui-shell-operator.png`, `ui-seatmap.png`,

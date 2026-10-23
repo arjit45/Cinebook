@@ -858,3 +858,159 @@
     -fx-font-size: 11px;
     -fx-text-fill: #3B372E;
 }
+
+/*
+  Programme (docs/PRD.md §3 screen 6). Two pages of the same stock: the film
+  catalogue on the left, the schedule builder and its day book on the right.
+  Rules carry the structure; the only filled block is a delete confirmation.
+*/
+.programme-eyebrow {
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #5F5B52;
+}
+
+.programme-form {
+    -fx-padding: 4 0 12 0;
+    -fx-border-color: transparent transparent #E0D9C8 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.programme-form-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #16181C;
+}
+
+.programme-film {
+    -fx-padding: 10 0 10 0;
+    -fx-border-color: transparent transparent #E0D9C8 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.programme-film-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #16181C;
+}
+
+.programme-film-meta {
+    -fx-font-size: 11px;
+    -fx-text-fill: #6E6A5F;
+}
+
+.programme-date {
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #3B372E;
+    -fx-padding: 10 0 4 0;
+}
+
+.programme-show {
+    -fx-padding: 7 0 7 0;
+    -fx-border-color: transparent transparent #E0D9C8 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.programme-time {
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #14615C;
+}
+
+.programme-show-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #16181C;
+}
+
+.programme-show-meta {
+    -fx-font-size: 10.5px;
+    -fx-text-fill: #6E6A5F;
+}
+
+.programme-note {
+    -fx-font-size: 12px;
+    -fx-text-fill: #14615C;
+}
+
+.programme-hint {
+    -fx-font-size: 10.5px;
+    -fx-text-fill: #8C8B84;
+}
+
+.programme-empty {
+    -fx-padding: 18 0 18 0;
+}
+
+.programme-confirm {
+    -fx-background-color: #F7E4DE;
+    -fx-background-radius: 4;
+    -fx-border-color: #D8412F;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-padding: 10 12 10 12;
+}
+
+.programme-confirm-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #16181C;
+}
+
+.button.link-button.danger-link {
+    -fx-text-fill: #B23B2A;
+}
+
+.combo-box,
+.date-picker {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.combo-box .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #16181C;
+    -fx-padding: 6 0 6 0;
+}
+
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 2 0 8;
+}
+
+.combo-box .arrow {
+    -fx-background-color: #6E6A5F;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #F4EFE2;
+    -fx-border-color: #D9D5C9;
+    -fx-border-width: 1;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #16181C;
+    -fx-padding: 6 10 6 10;
+}
+
+.combo-box-popup .list-cell:hover,
+.combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: #E0DDD3;
+    -fx-text-fill: #16181C;
+}
+
+.date-picker .text-field {
+    -fx-border-color: transparent transparent #8C8B84 transparent;
+}
+
+.date-picker .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 2 0 8;
+}
+
+.date-picker .arrow-button .arrow {
+    -fx-background-color: #6E6A5F;
+}

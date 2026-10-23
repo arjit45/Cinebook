@@ -295,7 +295,8 @@ the whole reason the column exists.
 
 ```
 ui/        views, components, css        (no SQL here, ever)
-service/   BookingService, ReportService, AuthService, ScheduleService
+service/   BookingService, CheckoutService, ProgrammeService, ReportService,
+           AuthService, ScheduleService
            ↳ owns transactions
 dao/       MovieDao, BookingDao, SeatDao, ShowtimeDao, ...  ↳ owns SQL
 model/     Movie, Screen, Seat, Showtime, Customer, Booking, Ticket
@@ -961,6 +962,8 @@ No N+1 anywhere. If a table needs a per-row lookup, that is a join, not a loop.
 | Seat map | every seat sold | "House full. Pick another screening." |
 | Bookings | no match | "No bookings match that search." |
 | Bookings, past show | screening already started | "This screening has already started — cancellation is no longer available." |
+| Programme | no films | "No films yet. Add the first one." |
+| Programme | no screenings | "No screenings yet. Add one above." |
 | Reports | no data in range | "Nothing sold in this period yet." |
 
 An empty screen is an invitation to act, not an apology.
@@ -1025,6 +1028,8 @@ tested instantly; only `BookingService` waits for a database.
 | `ReceiptWriter` | unit | file I/O without littering the repo | writes into a temp dir; output contains the booking reference; food sits below the seats; every line is ≤ 40 columns |
 | `BookingService` | `db` | the only place a transaction is opened | same seat held twice → `SeatUnavailableException`; sweep expired holds → seats freed, live holds untouched; cancel 3 h out → 90% of `ticket_amount`, exactly 2 h out → 50% |
 | `HoldExpiryDaemon` | `db` | background hold maintenance | daemon starts and stops cleanly; sweeps expired holds without clerk attribution |
+| `ProgrammeService` | `db` | the admin surface and the database's scheduling keys | add / read / update / delete; a film with screenings cannot be deleted; a taken slot returns the screen and time; past slots and short runtimes are refused; an operator cannot read the catalogue |
+| `ProgrammeView` | `ui` | the seam between the form and those rules | catalogue and every upcoming screening drawn; **New film** opens and **Cancel** closes the form; a taken slot shows the refusal and adds no row |
 
 The **price snapshot** gets its own test, because it is the invariant every report
 depends on: add a line at today's price, change `concession_item.unit_price`, and the
@@ -1032,12 +1037,13 @@ depends on: add a line at today's price, change `concession_item.unit_price`, an
 `showtime.base_price` after a hold and `ticket.price` must not move either. A snapshot
 that can be disturbed by an unrelated `UPDATE` is just a copy.
 
-Six classes, roughly thirty-five assertions. Credible, without becoming the project.
+Nine areas, 92 tests across the three groups (31 unit, 43 database, 18 UI). Credible,
+without becoming the project.
 
 ### 14.3 What is deliberately not unit tested
 
-- **UI Views.** Anything worth testing is moved into a service first; visual layout and end-to-end flows are covered by the headless UI test suite (`LoginFlowTest`).
-- **Database constraints.** Constraint enforcement is proved by the database integration tests (`DbSmokeTest`, `BookingServiceTest`, `ScheduleDaoTest`) and the SQL integrity test log in `docs/TESTS.md`.
+- **UI Views.** Anything worth testing is moved into a service first; visual layout and end-to-end flows are covered by the headless UI test suites (`LoginFlowTest`, `ProgrammeViewTest`).
+- **Database constraints.** Constraint enforcement is proved by the database integration tests (`DbSmokeTest`, `BookingServiceTest`, `ScheduleDaoTest`, `ProgrammeServiceTest`) and the SQL integrity test log in `docs/TESTS.md`.
 - **Report output.** Verified by running the queries and comparing against the fingerprinted output in `docs/QUERIES.md`.
 
 ## 15. Risks
@@ -1047,7 +1053,7 @@ Six classes, roughly thirty-five assertions. Credible, without becoming the proj
 - **Two-window concurrency demo** needs two app instances and two connections; fine,
   but rehearse it once so the demo is not the first attempt.
 - **Font loading** fails silently; check `Font.loadFont()` returns non-null.
-- **Scope creep in Programme CRUD** is the classic trap. Movies get create + edit only.
+- **Scope creep in Programme CRUD** is the classic trap. Movies get create, edit and a guarded delete — a film with screenings is refused — and nothing more.
 - **A destructive slip during the viva** — mitigated by the rebuild script, but only
   if you have run it once beforehand and know the timings.
 

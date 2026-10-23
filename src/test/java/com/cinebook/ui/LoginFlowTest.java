@@ -83,18 +83,11 @@ class LoginFlowTest {
 
     @BeforeAll
     static void startToolkit() throws Exception {
-        CountDownLatch ready = new CountDownLatch(1);
-        Platform.startup(() -> {
-            // The tests decide when the last window closes, not the toolkit.
-            Platform.setImplicitExit(false);
-            ready.countDown();
-        });
-        assertTrue(ready.await(30, TimeUnit.SECONDS), "the JavaFX toolkit did not start");
+        FxToolkit.start();
     }
 
     @AfterAll
     static void stopToolkit() {
-        Platform.exit();
         DB.close();
     }
 

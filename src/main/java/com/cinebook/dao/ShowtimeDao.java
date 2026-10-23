@@ -6,9 +6,14 @@ import com.cinebook.model.Showtime;
 import com.cinebook.model.enums.Certificate;
 import com.cinebook.util.Db;
 
+import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +37,7 @@ import java.util.List;
  */
 public final class ShowtimeDao {
 
-    private static final String UPCOMING_SQL = """
+    private static final String SHOW_COLUMNS = """
             SELECT st.showtime_id, st.show_date, st.start_time, st.base_price,
                    m.movie_id, m.title, m.genre, m.language, m.runtime_min,
                    m.release_date, m.certificate, m.imdb_rating,
@@ -42,10 +47,27 @@ public final class ShowtimeDao {
               FROM showtime st
               JOIN movie  m  ON m.movie_id  = st.movie_id
               JOIN screen sc ON sc.screen_id = st.screen_id
-             WHERE st.show_date >= CURDATE()
+            """;
+
+    private static final String ORDER_AND_LIMIT = """
              ORDER BY st.show_date, st.start_time, sc.name, st.showtime_id
              LIMIT ?
             """;
+
+    private static final String UPCOMING_SQL = SHOW_COLUMNS
+            + " WHERE st.show_date >= CURDATE()" + ORDER_AND_LIMIT;
+
+    /** The Programme list: only what has not already started. */
+    private static final String PROGRAMME_SQL = SHOW_COLUMNS
+            + " WHERE TIMESTAMP(st.show_date, st.start_time) >= NOW()" + ORDER_AND_LIMIT;
+
+    private static final String INSERT_SQL = """
+            INSERT INTO showtime (movie_id, screen_id, show_date, start_time, base_price)
+            VALUES (?, ?, ?, ?, ?)
+            """;
+
+    private static final String COUNT_FOR_MOVIE_SQL =
+            "SELECT COUNT(*) AS n FROM showtime WHERE movie_id = ?";
 
     private final Db db;
 
@@ -54,9 +76,18 @@ public final class ShowtimeDao {
     }
 
     public List<Showtime> upcoming(int limit) throws SQLException {
+        return query(UPCOMING_SQL, limit);
+    }
+
+    /** Upcoming screenings for the Programme screen, excluding today's finished slots. */
+    public List<Showtime> programme(int limit) throws SQLException {
+        return query(PROGRAMME_SQL, limit);
+    }
+
+    private List<Showtime> query(String sql, int limit) throws SQLException {
         List<Showtime> shows = new ArrayList<>();
         try (Db.Handle handle = db.borrow();
-             PreparedStatement statement = handle.connection().prepareStatement(UPCOMING_SQL)) {
+             PreparedStatement statement = handle.connection().prepareStatement(sql)) {
             statement.setInt(1, limit);
             try (ResultSet rows = statement.executeQuery()) {
                 while (rows.next()) {
@@ -65,6 +96,38 @@ public final class ShowtimeDao {
             }
         }
         return shows;
+    }
+
+    /** Adds one screening and returns the id MySQL assigned. */
+    public int insert(Connection connection, int movieId, int screenId,
+                      LocalDate showDate, LocalTime startTime, BigDecimal basePrice)
+            throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                INSERT_SQL, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setInt(1, movieId);
+            statement.setInt(2, screenId);
+            statement.setObject(3, showDate);
+            statement.setObject(4, startTime);
+            statement.setBigDecimal(5, basePrice);
+            statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (!keys.next()) {
+                    throw new SQLException("MySQL did not return a showtime id");
+                }
+                return keys.getInt(1);
+            }
+        }
+    }
+
+    /** How many screenings a film has; a film with any cannot be deleted. */
+    public int countForMovie(Connection connection, int movieId) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(COUNT_FOR_MOVIE_SQL)) {
+            statement.setInt(1, movieId);
+            try (ResultSet rows = statement.executeQuery()) {
+                rows.next();
+                return rows.getInt("n");
+            }
+        }
     }
 
     private static Showtime map(ResultSet rows) throws SQLException {

@@ -52,6 +52,7 @@ public final class ShellView {
     private static final DateTimeFormatter TIME =
             DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH);
 
+    private final AuthService auth;
     private final StaffUser user;
     private final Runnable onSignOut;
 
@@ -70,6 +71,7 @@ public final class ShellView {
     private VBox scheduleCentre;
 
     public ShellView(AuthService auth, StaffUser user, Runnable onSignOut) {
+        this.auth = auth;
         this.user = user;
         this.onSignOut = onSignOut;
         build();
@@ -176,6 +178,9 @@ public final class ShellView {
         } else if (section.equals("Bookings")) {
             meta.setText("Sales register and refund cancellation");
             body.getChildren().add(new BookingsView(user).root());
+        } else if (section.equals("Programme")) {
+            meta.setText("Film catalogue and screening schedule");
+            body.getChildren().add(new ProgrammeView(auth).root());
         } else {
             meta.setText(TODAY.format(LocalDate.now()));
             Label empty = new Label("Nothing to show here yet.");
