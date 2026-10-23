@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The Reports service against the seeded database: the five rubric queries, the
+ * The Reports service against the seeded database: the core analytical queries, the
  * read-only guard, and the shift summary's own-clerk scope.
  *
  * <p>The report totals are compared with a direct aggregate of the same rows, so

@@ -15,14 +15,14 @@ later day moves every printed calendar date — counts, revenue, rankings and
 
 Run AFTER 03_objects.sql
 
-Queries 1-5 are the five patterns your lab sheet uses for every project. Queries 6-13 are the follow-ups an examiner is likely to invent on the spot; 14 is the transaction drill you walk through on a HELD booking during the viva.
+Queries 1-5 cover baseline operational cataloguing and aggregation. Queries 6-13 cover advanced business reporting, reconciliation, and analytical audits; 14 is the atomic transaction drill walkthrough on a HELD booking.
 
 One recurring trap, visible in 2, 5 and 12: a booking has many tickets AND many food lines, so joining both in one statement multiplies the rows and inflates every SUM. The money columns live on `booking` for exactly this reason — read them from there, and aggregate the many-side in its own subquery.
 
 
-## The five patterns
+## Core Operational Patterns
 
-| # | Lab-sheet request | What this query returns |
+| # | Business Requirement | What this query returns |
 |---|---|---|
 | 1 | "Retrieve all X with attributes, sorted" | All upcoming screenings with seats still available. |
 | 2 | "Count per category / GROUP BY" | Bookings, seats and money per auditorium, last 30 days, with the ticket and food revenue shown separately. |
@@ -43,7 +43,7 @@ One recurring trap, visible in 2, 5 and 12: a booking has many tickets AND many 
 | 11 | LEFT JOIN + IS NULL — seats that have never been sold |
 | 12 | The F&B-vs-ticket query. |
 | 13 | SHIFT SUMMARY (the Z-report). |
-| 14 | TRANSACTION demo for the viva. |
+| 14 | TRANSACTION drill — Manual verification of atomic booking confirmation. |
 
 
 ## 1. "Retrieve all X with attributes, sorted"
@@ -314,7 +314,7 @@ ORDER BY total_spent DESC;
 
 ## 7. Same answer as Pattern 4, written with NOT EXISTS.
 
-Worth showing both — the examiner often asks for the other form.
+Demonstrates relational completeness and alternative query strategy.
 
 ```sql
 SELECT m.movie_id, m.title
@@ -566,7 +566,7 @@ WHERE cancelled_by_staff_id = @staff_id
 ```
 
 
-## 14. TRANSACTION demo for the viva.
+## 14. TRANSACTION drill — Manual verification of atomic booking confirmation.
 
 Run these by hand on a HELD booking:
 

@@ -91,6 +91,34 @@ class ReportsViewTest {
     }
 
     @Test
+    void everyRevenueColumnKeepsAReadableWidth() throws Exception {
+        Parent root = openReports();
+        runOnFx(() -> {
+            root.applyCss();
+            root.layout();
+            return null;
+        });
+
+        TableView<List<String>> table = runOnFx(() -> reportTable(root));
+        String widths = runOnFx(() -> table.getColumns().stream()
+                .map(column -> column.getText() + "=" + Math.round(column.getWidth()))
+                .toList().toString());
+
+        assertTrue(runOnFx(() -> table.getWidth() > 800),
+                "the table must be laid out at a real width before columns are measured");
+        assertEquals(6, runOnFx(() -> table.getColumns().size()),
+                "Revenue by screen has six columns");
+        assertTrue(runOnFx(() -> table.getColumns().stream()
+                        .allMatch(column -> column.getWidth() >= 80)),
+                "no column may be squeezed below a readable header: " + widths);
+
+        double textWidth = runOnFx(() -> table.getColumns().get(0).getWidth());
+        double numberWidth = runOnFx(() -> table.getColumns().get(1).getWidth());
+        assertTrue(textWidth >= numberWidth * 1.15,
+                "Screen must lead the numeric columns, not share their width: " + widths);
+    }
+
+    @Test
     void clickingOccupancyReplacesTheSheet() throws Exception {
         Parent root = openReports();
 

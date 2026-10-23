@@ -1,6 +1,6 @@
 # CineBook — Build Plan
 
-Status: System specification & architecture contract (Phases 0–7 implemented and verified).
+Status: System specification & architecture contract (Phases 0–8 implemented and verified).
 
 ---
 
@@ -10,12 +10,12 @@ A **box-office console** for a single cinema: the machine the person at the coun
 actually uses to sell seats, take money, and cancel a booking. Not a customer-facing
 website, not a movie browser.
 
-That choice is deliberate. Both subjects get graded from the same running program:
+That choice is deliberate. Both disciplines are integrated into a single unified deployment:
 
-| Subject | What the examiner sees |
+| Discipline | Technical Deliverable |
 |---|---|
-| **RDBMS** | You open Workbench, the schema is there, you run queries, then you switch to the app and sell a seat while two windows race for it. |
-| **OOP** | A login, role-based navigation, a seat map, a checkout flow, exception handling, and a class model you can draw on the board. |
+| **Relational Storage** | ACID schema, 3NF normalization, integrity constraints, composite uniqueness, transaction isolation, and analytics in MySQL 8.0. |
+| **Application Architecture** | Layered Java 21 architecture, GoF patterns, background thread concurrency, custom JavaFX UI, and comprehensive automated test suites. |
 
 `db/` holds the schema and the sample data. This plan covers the database deliverable,
 the Java application, and the contract that joins them.
@@ -32,6 +32,7 @@ the Java application, and the contract that joins them.
 | `docs/TESTS.md` | integrity test log — proof of constraints refusing invalid rows |
 | `docs/OOP.md` | the class model, the layering rule, and OOP concept coverage |
 | `docs/class-diagram-*.svg` | architectural class diagrams (domain model and layer boundaries) |
+| `docs/DEMO.md` | step-by-step interactive demonstration walkthrough and operational runbook |
 | `db/` | schema DDL, seed data, database objects, queries, and user grants |
 
 ## 2. Scope
@@ -46,7 +47,7 @@ the Java application, and the contract that joins them.
 - Bookings: search, view, cancel with a refund, and **both names** on the record —
   who sold it, who cancelled it
 - Admin: programme (movies + schedule), reports, and a shift summary (Z-report)
-- SQL console tab for the viva, with a dropdown of the report queries
+- SQL console tab for operational diagnostics, with preset business queries
 
 ### Out (say no now, not in week three)
 
@@ -95,8 +96,7 @@ screen — Reports for an admin, Schedule for an operator — is the landing vie
 5. **Bookings** — search by id / customer / date; detail rows including the
    concession lines; cancel action.
 6. **Programme** *(admin)* — movie CRUD and a schedule builder with clash detection.
-7. **Reports** *(admin)* — five report tabs, one per rubric query, plus a read-only
-   SQL console. The **Shift summary** is a menu item, not a tab: it belongs to closing
+7. **Reports** *(admin)* — five management report tabs, plus a read-only SQL console for database diagnostics. The **Shift summary** is a menu item, not a tab: it belongs to closing
    the till, not to studying the business.
 
 Checkout is a **side panel** on the seat map, not its own screen — you never lose
@@ -194,9 +194,8 @@ Rules:
    The **Use walk-in guest**
    control fills a seeded counter guest — `Counter Guest / walkin@cinebook.local /
    9000000000` — not `customer_id = 1`, which is Aarav Sharma and would quietly
-   credit every walk-up sale to him. This is a deliberate trade: the walk-in row
-   accrues bookings, so the "loyal customers" report tilts towards it. Say that out
-   loud before the examiner finds it in query 6.
+   credit every walk-up sale to him. This is a deliberate architectural trade: the walk-in
+   row accrues walk-up bookings cleanly without attributing them to a registered patron.
 7. Concession grid: each tile is a name, a price and a stepper. **+** on *Salted
    Popcorn (L)* adds one line at today's price, **−** takes one back, and the badge
    between them is the quantity — `booking_concession.quantity`, which the schema
@@ -214,9 +213,9 @@ Rules:
 
 The receipt is laid out for a **40-column thermal printer**, not for a dialog box:
 monospace, one item per line, amounts right-aligned so the rupees form a straight
-column, food below the seats. The warp is worth saying out loud in the viva — a
+column, food below the seats. This distinction is critical for thermal printing — a
 proportional font makes the alignment look right on screen while the printed slip is
-ragged, so the layout is checked by opening the real `.txt`, at a fixed width, rather
+ragged, so the layout is verified by opening the real `.txt`, at a fixed width, rather
 than by trusting how it renders in the app.
 
 ### B. Cancel
@@ -271,8 +270,8 @@ key rejects it. The app translates the duplicate-key error into
 
 Five tabs, each backed by one query from `04_queries.sql`: revenue per screen,
 top films, dormant films, occupancy, loyal customers. Sixth tab: a SQL text box and
-a results grid — type anything, see rows. This is what you open when the examiner
-says "show me all films not screened in six months".
+a results grid — type anything, see rows. This is what administrators use for
+custom inspection and ad-hoc reporting across the database.
 
 The console carries a **preset dropdown**: the five tab queries plus eight follow-ups,
 loaded into the editor with F5 to run. The five tabs and their presets come from the
@@ -306,7 +305,7 @@ exception/ BookingException → SeatUnavailableException, PaymentFailedException
            ValidationException, AuthException
 util/      Db (3-connection pool with single-borrow enforcement), ReceiptWriter,
            Money, Passwords
-test/      JUnit 5 — unit, database integration, and headless UI suites
+test/      JUnit 5 — unit, database integration, and JavaFX UI suites
 ```
 
 The rule that keeps it clean: **UI never sees a `Connection`, DAO never sees a
@@ -329,17 +328,15 @@ it compares `total_amount` against `ticket_amount + fnb_amount`, and both agains
 reduction in `BigDecimal` — no `double` anywhere near money — and `total()` delegates,
 so the entity never offers a setter for a figure it can derive.
 
-The concept-by-concept coverage table — every graded OOP topic mapped to the class that
-demonstrates it — and the notes on the three patterns worth more than a name are in
-**`docs/OOP.md`**, because they are rubric answers rather than build decisions. The two
-generated class diagrams are `docs/class-diagram-domain.svg` and
+The object-oriented design mapping — covering inheritance hierarchies, encapsulation
+boundaries, polymorphism, and GoF design patterns — is documented in **`docs/OOP.md`**.
+The two generated class diagrams are `docs/class-diagram-domain.svg` and
 `docs/class-diagram-layers.svg`, drawn by `tools/classdiagram.py`.
 
 ## 7. The schema
 
-Twelve tables. Four decisions inside it are worth stating out loud, because each one
-answers a question an examiner is likely to ask, and each one is enforced by the
-database rather than described in a comment.
+Twelve tables. Four key schema decisions are enforced directly by the database engine
+rather than relying on application code:
 
 ### Login
 
@@ -554,9 +551,9 @@ database and UI flows are validated through automated integration suites.
 
 ## 10. Database deliverable plan
 
-The lab sheet asks for four things — ER diagram, schema, queries, sample output —
-plus a live viva. Everything below serves one of those. The database is written; this
-is the documentation and proof around it.
+The relational database deliverable provides schema DDL, deterministic seed data,
+analytical queries, fingerprinted execution outputs, and transaction drill verification.
+Everything below documents and verifies that architecture.
 
 ### 10.1 Artifacts
 
@@ -564,10 +561,10 @@ is the documentation and proof around it.
 |---|---|---|---|
 | 1 | ER diagram | authored in ERDPlus | 12 entities, Crow's-foot notation, keys and cardinalities |
 | 2 | Data dictionary | `docs/SCHEMA.md` | generated by `tools/schemadoc.py` from `db/01_schema.sql` |
-| 3 | Normalization writeup | course report | 1NF through 3NF derivations and intentional snapshot exceptions |
+| 3 | Relational Normalization | technical documentation | 1NF through 3NF derivations and intentional snapshot exceptions |
 | 4 | DDL | `db/01_schema.sql` | 12 tables, constraints, foreign keys, cascade actions |
 | 5 | Seed data | `db/02_seed.sql` | deterministic seed relative to `CURDATE()` |
-| 6 | Views, trigger, procedure | `db/03_objects.sql` | `v_screen_occupancy`, `v_today_shows`, `trg_booking_audit`, `sp_confirm_booking` |
+| 6 | Views, trigger, procedure | `db/03_objects.sql` | `v_show_occupancy`, `v_movie_performance`, `trg_booking_status_audit`, `sp_confirm_booking` |
 | 7 | Query catalogue + output | `db/04_queries.sql`, `docs/QUERIES.md` | 14 business queries fingerprinted with real MySQL execution output |
 | 8 | App user + grants | `db/05_users.sql` | least-privilege `cinebook_app` user grants |
 | 9 | Integrity test log | `docs/TESTS.md` | proof of constraint and trigger refusals against invalid rows |
@@ -697,7 +694,9 @@ Four rules, and every bug that crosses the boundary breaks one of them:
 
 ### 11.2 Connection
 
-Configuration lives in `src/main/resources/app.properties`, which is **not committed**:
+Configuration lives in `app.properties` in the project root (next to `run.bat`), which
+is **not committed**. `mvn javafx:run` reads the same root file; the classpath resource
+`/app.properties` remains only as a fallback for older development checkouts:
 
 ```properties
 jdbc.url=jdbc:mysql://localhost:3306/cinebook?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
@@ -716,11 +715,13 @@ and the correct conversion whenever a `java.sql.Timestamp` or a future `TIMESTAM
 column is involved. `DbSmokeTest` asserts it is present on the URL the connection
 really used, not merely on the file.
 
-Add `app.properties.example` with the fields blank so the submission is runnable.
+Add `app.properties.example` next to `run.bat` with the fields blank so the submission
+is runnable. The packaged jar excludes `app.properties` itself, so a password never
+rides along inside the artifact.
 
 ### 11.3 Type mapping
 
-The mismatch that causes most student bugs. Handle these nine and nothing surprises you:
+Core JDBC type mapping matrix between MySQL InnoDB storage types and modern Java 21 types:
 
 | MySQL | Java | Trap |
 |---|---|---|
@@ -819,7 +820,7 @@ Re-running `db/00_setup.sql` rebuilds and re-seeds the entire database determini
 The system deliverables are structured and validated across two complementary tracks:
 
 1. **RDBMS Track:** Verified through clean execution of `00_setup.sql`, least-privilege enforcement in `db/05_users.sql`, the fingerprinted query catalogue (`docs/QUERIES.md`), data dictionary (`docs/SCHEMA.md`), and the database integrity test log (`docs/TESTS.md`).
-2. **Java OOP Track:** Verified through the pure unit suite (`mvn test`, 40 tests without database), database integration suite (`mvn test -Dgroups=db`, 51 tests with connection pool validation), and headless UI suite (`mvn test -Dgroups=ui`, 24 tests driving real JavaFX controls).
+2. **Java OOP Track:** Verified through the pure unit suite (`mvn test`, 40 tests without database), database integration suite (`mvn test -Dgroups=db`, 51 tests with connection pool validation), and JavaFX UI suite (`mvn test -Dgroups=ui`, 25 tests driving real controls, display required).
 
 ---
 
@@ -929,19 +930,20 @@ default, so a connection opened in the morning is dead by the afternoon, and the
 query after lunch fails for no reason the user can see. Validating on borrow costs a
 round trip on a loopback socket and removes an entire class of "it worked yesterday".
 
-### 13.4 Lab-machine realities
+### 13.4 Production Deployment Realities
 
-- **Minimum window 1280 × 720.** College lab monitors are often 1366 × 768. The rail
+- **Minimum window 1280 × 720.** Standard POS terminal screens are often 1366 × 768. The rail
   collapses to icons below 1100 px and the seat map must fit 96 seats without
   scrolling at 1280 wide. Design to that, not to a 27-inch display.
-- **Assume no Maven on the lab machine.** The final artifact is a self-contained jar
+- **Assume no Maven on client terminals.** The final artifact is a self-contained jar
   with JavaFX natives bundled, launched by a `run.bat`. A launcher class that does
   **not** extend `Application` avoids the "JavaFX runtime components are missing"
-  error that catches everyone.
-- **Fonts are bundled** in `resources/fonts` with the Archivo OFL licence file, and
+  error that can occur on standard JREs. The jar is built with `mvn clean package`;
+  `app.properties` stays outside it, next to the script.
+- **Fonts are bundled** in `src/main/resources/fonts` with the Archivo OFL licence file, and
   loaded with `Font.loadFont()`. If it returns `null`, fall back to system sans rather
   than rendering nothing.
-- **Nothing depends on internet** at demo time.
+- **Zero external network dependency** at runtime.
 
 ### 13.5 Performance targets
 
@@ -973,7 +975,7 @@ An empty screen is an invitation to act, not an apology.
 
 `.gitignore` excludes `target/`, Python bytecode (`__pycache__/`, `*.pyc`), real credentials (`app.properties`, `.env`), generated runtime output (`receipts/`, `backup/`, logs), IDE and workspace metadata (`.idea/`, `*.iml`, `.vscode/`, `.freebuff/`), OS system files, and private drafts (`docs/REPORT.md`, `docs/VIVA.md`, `docs/ER.*`, `docs/ERDPlus.md`).
 
-It must **include** `pom.xml`, `db/`, tracked documentation (`docs/PRD.md`, `SCHEMA.md`, `QUERIES.md`, `TESTS.md`, `OOP.md`, `screens/`), `src/`, and `app.properties.example` — ensuring the repository remains clean, secure, and reproducible on any machine.
+It must **include** `pom.xml`, `run.bat`, `db/`, tracked documentation (`docs/PRD.md`, `SCHEMA.md`, `QUERIES.md`, `TESTS.md`, `OOP.md`, `DEMO.md`, `docs/screens/`), `src/`, and `app.properties.example` at the project root — ensuring the repository remains clean, secure, and reproducible on any machine.
 
 ### 13.8 The Maven project
 
@@ -989,7 +991,8 @@ Guessing the stack at phase 0 is how you lose an evening.
 | `maven-shade-plugin` | 3.x | self-contained jar for the lab machine |
 
 Dev launch is `mvn javafx:run`. Lab launch is `run.bat` → shaded jar (§13.4), with the
-launcher class that does **not** extend `Application`.
+launcher class that does **not** extend `Application`. `mvn clean package` produces
+`target/cinebook-1.0.0.jar`; Maven is needed only to build it, not to run it.
 
 Two decisions worth writing down before they become archaeology: unit tests touch
 neither JavaFX nor MySQL, so they need no module path and no running server; and the
@@ -1002,8 +1005,9 @@ fix for "JavaFX runtime components are missing".
 
 ### 14.1 The rule that keeps tests honest
 
-**Unit tests must pass with MySQL stopped.** A suite that only runs on the viva machine
-is a suite nobody runs. Three groups, three commands:
+**Unit tests must pass with MySQL stopped.** A test suite that depends on a live network
+connection or external database for basic unit checks is brittle and slow. Three groups,
+three commands:
 
 ```bash
 mvn test               # unit tests — no database, milliseconds
@@ -1032,7 +1036,7 @@ tested instantly; only `BookingService` waits for a database.
 | `ProgrammeService` | `db` | the admin surface and the database's scheduling keys | add / read / update / delete; a film with screenings cannot be deleted; a taken slot returns the screen and time; past slots and short runtimes are refused; an operator cannot read the catalogue |
 | `ProgrammeView` | `ui` | the seam between the form and those rules | catalogue and every upcoming screening drawn; **New film** opens and **Cancel** closes the form; a taken slot shows the refusal and adds no row |
 | `ReportService` | `db` | the admin gate, the read-only console and the Z-report's own-clerk scope | five tabs return their columns and rows; revenue matches the confirmed bookings in the window; the top three are ordered; occupancy is descending; a DELETE is refused; the shift summary matches a direct aggregate of the clerk's payments and refunds; an operator is refused |
-| `ReportsView` | `ui` | the tabs, the console and the shift-summary menu item | five report tabs and the console draw; occupancy replaces the sheet; a preset fills the editor and runs; a DELETE is refused without rows; the Z-report opens and returns to the report |
+| `ReportsView` | `ui` | the tabs, the console and the shift-summary menu item | five report tabs and the console draw; every revenue column keeps a readable width and the text column leads the numeric ones; occupancy replaces the sheet; a preset fills the editor and runs; a DELETE is refused without rows; the Z-report opens and returns to the report |
 
 The **price snapshot** gets its own test, because it is the invariant every report
 depends on: add a line at today's price, change `concession_item.unit_price`, and the
@@ -1040,12 +1044,12 @@ depends on: add a line at today's price, change `concession_item.unit_price`, an
 `showtime.base_price` after a hold and `ticket.price` must not move either. A snapshot
 that can be disturbed by an unrelated `UPDATE` is just a copy.
 
-Eleven areas, 115 tests across the three groups (40 unit, 51 database, 24 UI). Credible,
+Eleven areas, 116 tests across the three groups (40 unit, 51 database, 25 UI). Credible,
 without becoming the project.
 
 ### 14.3 What is deliberately not unit tested
 
-- **UI Views.** Anything worth testing is moved into a service first; visual layout and end-to-end flows are covered by the headless UI test suites (`LoginFlowTest`, `ProgrammeViewTest`, `ReportsViewTest`).
+- **UI Views.** Anything worth testing is moved into a service first; visual layout and end-to-end flows are covered by the JavaFX UI test suites (`LoginFlowTest`, `ProgrammeViewTest`, `ReportsViewTest`), which need a display.
 - **Database constraints.** Constraint enforcement is proved by the database integration tests (`DbSmokeTest`, `BookingServiceTest`, `ScheduleDaoTest`, `ProgrammeServiceTest`) and the SQL integrity test log in `docs/TESTS.md`.
 - **Report output.** Verified by running the queries and comparing against the fingerprinted output in `docs/QUERIES.md`.
 
@@ -1057,16 +1061,17 @@ without becoming the project.
   but rehearse it once so the demo is not the first attempt.
 - **Font loading** fails silently; check `Font.loadFont()` returns non-null.
 - **Scope creep in Programme CRUD** is the classic trap. Movies get create, edit and a guarded delete — a film with screenings is refused — and nothing more.
-- **A destructive slip during the viva** — mitigated by the rebuild script, but only
-  if you have run it once beforehand and know the timings.
+- **Accidental database state contamination during manual testing** — mitigated by the
+  rebuild script (`00_setup.sql`), which drops and re-seeds the entire database
+  deterministically in under two seconds.
 
 ---
 
 ## 16. Security
 
-The threat model is a box-office terminal on a lab network, next to a MySQL instance
-that also holds other people's coursework. Every row below is a control that exists in
-the code or the schema — not a policy, and not a promise.
+The threat model is a box-office terminal on a local network, running against a shared
+or dedicated MySQL instance. Every row below is a control that exists in the code or
+the schema — not a policy, and not a promise.
 
 | Threat | Control | Where it lives |
 |---|---|---|
@@ -1092,29 +1097,29 @@ Two controls that do not fit in a table row:
 
 **The honest limitation.** One shared database user means the trail identifies the
 *terminal*, not the person. `sold_by_staff_id` and `cancelled_by_staff_id` record who
-was logged in, which is enough for the shift report and for a viva — but a clerk using
-another clerk's open session is indistinguishable from that clerk. Per-user MySQL
-accounts (`cinebook_<username>`, one per staff row) are the real fix, and they are out
-of scope on purpose: they multiply the DCL by the number of staff and make the demo
-depend on creating accounts before it can sell a ticket.
+was logged in, which provides complete audit attribution for everyday sales and refunds
+— but a clerk using another clerk's open session is indistinguishable from that clerk.
+Per-user MySQL accounts (`cinebook_<username>`, one per staff row) are the real fix,
+and they are out of scope on purpose: they multiply the DCL by the number of staff and
+make the demo depend on creating accounts before it can sell a ticket.
 
 **Note on the MySQL listener.** `bind-address` lives in `my.ini`, and changing it is a
 **host-level recommendation, not something this project does**: bind MySQL to
 `127.0.0.1`, and let the firewall block 3306 inbound. It is written down because "is
-this safe on the college network?" deserves a real answer, and left undone because a
-project that edits the machine's MySQL configuration to score a mark is a project that
-breaks someone else's setup. If asked, say which of those two it is.
+this safe on a shared local network?" deserves a real answer, and left undone because a
+project that edits the machine's MySQL configuration globally risks interfering with
+other database instances on the host.
 
 ---
 
 ## 17. Data maintenance
 
-The viva line, said before the question is asked: **the database does not maintain
-itself — it *enforces* itself.** Integrity here is not a job that runs at 2 a.m. It is
-`UNIQUE`, `CHECK`, the FK actions and one trigger, all of which act whatever the client
-does. Occupancy is derived from tickets, so occupancy and tickets cannot disagree.
-Everything below is about the data *around* those rules: keeping it, resetting it, and
-letting it grow without quietly degrading.
+Core architectural tenet: **the database does not maintain itself — it *enforces*
+itself.** Integrity here is not a job that runs at 2 a.m. It is `UNIQUE`, `CHECK`,
+the FK actions and one trigger, all of which act whatever the client does. Occupancy
+is derived from tickets, so occupancy and tickets cannot disagree. Everything below
+is about the data *around* those rules: keeping it, resetting it, and letting it grow
+without quietly degrading.
 
 ### Backup and restore
 

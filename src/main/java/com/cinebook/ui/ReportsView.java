@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
  * The Reports screen (docs/PRD.md §3 screen 7): five ledger tabs, a read-only
  * SQL console, and the shift summary behind a menu item.
  *
- * <p>The tabs are the five rubric queries from {@code db/04_queries.sql}. The
+ * <p>The tabs are the core analytical queries from {@code db/04_queries.sql}. The
  * console's presets are built from the same query objects, so selecting a tab's
  * query there shows the same SQL the tab ran rather than a second copy. The
  * console is read-only by design: SELECT, SHOW, EXPLAIN and DESCRIBE run; DML
@@ -479,7 +479,10 @@ public final class ReportsView {
 
     private void fillTable(TableView<List<String>> table, List<String> columns,
                            List<List<String>> rows, String emptyText, int rowCount) {
-        table.getColumns().clear();
+        // Build the columns in a list and set them at once. Adding them one by one
+        // lets the constrained policy give the whole table width to the first column
+        // before the others exist, which leaves the later headers clipped.
+        List<TableColumn<List<String>, String>> built = new ArrayList<>();
         for (int index = 0; index < columns.size(); index++) {
             final int cellIndex = index;
             String raw = columns.get(index);
@@ -487,7 +490,11 @@ public final class ReportsView {
             column.setSortable(false);
             column.setCellValueFactory(data -> new ReadOnlyStringWrapper(
                     cellIndex < data.getValue().size() ? data.getValue().get(cellIndex) : ""));
-            if (isNumeric(raw, rows, index)) {
+            boolean numeric = isNumeric(raw, rows, index);
+            // Names, films and dates need room to breathe; numbers are short and
+            // right-aligned, so they read better in a narrower column.
+            column.setPrefWidth(numeric ? 130 : 240);
+            if (numeric) {
                 column.getStyleClass().add("report-number-column");
                 column.setCellFactory(ignored -> {
                     TableCell<List<String>, String> cell = new TableCell<>() {
@@ -502,8 +509,9 @@ public final class ReportsView {
                     return cell;
                 });
             }
-            table.getColumns().add(column);
+            built.add(column);
         }
+        table.getColumns().setAll(built);
         table.setItems(FXCollections.observableArrayList(rows));
         table.setPlaceholder(emptyLabel(emptyText));
         table.setPrefHeight(Math.min(420, Math.max(180, 52 + rowCount * 38)));

@@ -4,6 +4,10 @@ import com.cinebook.exception.DbUnavailableException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -50,9 +54,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class Db {
 
     private static final String CONFIG_RESOURCE = "/app.properties";
+    private static final String CONFIG_FILE = "app.properties";
     private static final String CONFIG_HELP =
-            "Copy src/main/resources/app.properties.example to app.properties and set "
-                    + "jdbc.password to the password chosen in db/05_users.sql.";
+            "Copy app.properties.example to app.properties in the project root (next to "
+                    + "run.bat) and set jdbc.password to the password chosen in db/05_users.sql.";
 
     /** Two windows and the expiry job (docs/PRD.md §11.7). */
     static final int POOL_SIZE = 3;
@@ -352,10 +357,27 @@ public final class Db {
 
     private static Properties loadConfig() {
         Properties properties = new Properties();
+
+        // The packaged jar is built without app.properties so it can be handed to
+        // someone without handing over a password. run.bat starts in the project
+        // root, where the local file sits next to app.properties.example; the
+        // classpath lookup remains only for older development checkouts.
+        Path file = Path.of(CONFIG_FILE);
+        if (Files.isRegularFile(file)) {
+            try (Reader in = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+                properties.load(in);
+                return properties;
+            } catch (IOException e) {
+                throw new IllegalStateException(
+                        "Could not read " + file.toAbsolutePath() + ". " + CONFIG_HELP, e);
+            }
+        }
+
         try (InputStream in = Db.class.getResourceAsStream(CONFIG_RESOURCE)) {
             if (in == null) {
                 throw new IllegalStateException(
-                        "app.properties is missing from the classpath. " + CONFIG_HELP);
+                        "app.properties was not found next to run.bat or on the classpath. "
+                                + CONFIG_HELP);
             }
             properties.load(in);
         } catch (IOException e) {

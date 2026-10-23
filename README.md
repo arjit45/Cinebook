@@ -71,12 +71,12 @@ CineBook strictly separates concerns across four decoupled layers:
 
 ---
 
-### Dual-Discipline Academic Context
+### Core Technical Disciplines
 
-| Subject | Scope | Implementation |
+| Domain | Architecture & Scope | Implementation |
 |---|---|---|
-| **RDBMS** | ER modeling, relational schema, normalization, integrity constraints, ACID transactions, and analytical queries | `db/` (MySQL 8.0 / InnoDB) |
-| **OOP in Java** | Layered architecture, GoF design patterns, concurrent background daemons, and JavaFX UI | `src/` (Java 21 / Maven) |
+| **Relational Storage** | Relational schema, 3NF normalization, integrity constraints, ACID transactions, and analytical reporting | `db/` (MySQL 8.0 / InnoDB) |
+| **Object-Oriented Desktop** | Layered architecture, GoF design patterns, concurrent background daemons, and JavaFX UI | `src/` (Java 21 / Maven) |
 
 Database: **MySQL 8.0** (already installed on this machine) · Client: **MySQL Workbench**
 
@@ -89,7 +89,8 @@ Database: **MySQL 8.0** (already installed on this machine) · Client: **MySQL W
 3. Press the lightning bolt (⚡) to execute the entire script.
 4. Refresh the schema sidebar — a database called **`cinebook`** appears with 12 tables
    and 2 views.
-5. At the bottom of the run, a sanity-check grid prints row counts. Expect:
+5. When the seed finishes, partway through the script, a sanity-check grid prints row
+   counts. Expect:
 
 ```
 movie 8 | screen 4 | seat 384 | showtime 136 | customer 21 | staff_user 2
@@ -117,8 +118,9 @@ Then, **once**, as root, create the account the application connects with:
 mysql -u root -p < db/05_users.sql      # edit CHANGE_ME first
 ```
 
-That password must match `jdbc.password` in `src/main/resources/app.properties`, which
-is gitignored. Copy `app.properties.example` to `app.properties` and fill it in. Expect
+That password must match `jdbc.password` in `app.properties` in the project root, which
+is gitignored. Copy `app.properties.example` to `app.properties` and fill it in; the
+same file is used by `mvn javafx:run`, by the packaged jar and by `run.bat`. Expect
 three grant lines: `USAGE ON *.*` (MySQL's "no rights here" placeholder), DML on
 `cinebook.*`, and `EXECUTE` on `sp_confirm_booking` — nothing else. The account is
 tested against DDL, other schemas and `GRANT`; the transcript is in
@@ -146,17 +148,16 @@ python tools/buildsetup.py          # rebuild
 python tools/buildsetup.py --check  # exit 1 if it has drifted from its parts
 ```
 
-Skipping that step is how the submission ends up carrying two versions of the schema,
-with the wrong one winning.
+Skipping that step can cause deployment drift between the bundle and individual migration files.
 
 `db/explain-index.sql` is the evidence file, and it is **not** part of that order. It is
 read-only: it reprints both `EXPLAIN` plans for the date query, then the same queries
 under `EXPLAIN ANALYZE` for measured milliseconds, on a 200 000-row `TEMPORARY` copy of
 `showtime` that disappears when the session closes. Run it whenever the index claim is
-challenged — the output it prints is what the course report index analysis records.
+verified — the output it prints provides measured query execution times and query optimization plans.
 
-`db/viva-queries.sql` is the presentation file — 21 self-contained blocks to run in
-Workbench during the viva, including the deliberate failures.
+`db/viva-queries.sql` is the verification script — 21 self-contained interactive
+query blocks for live walkthroughs, concurrency drills, and testing constraint refusals.
 
 ### Building and testing
 
@@ -187,7 +188,7 @@ refused second payment, replacing walk-in with named customer), plus hold-expiry
 refund-aware cancellations (90% early vs 50% late), refused cancellations for past screenings,
 bookings search and audit projections, hold-expiry daemon lifecycle, and the Programme
 service's film CRUD, guarded delete, screening insert, double-booked slot message and
-admin gate. The Reports service checks the five rubric queries against the seed, the
+admin gate. The Reports service checks the core business reporting queries against the seed, the
 console's read-only guard, and the shift summary against a direct aggregate of the same
 clerk's payments and refunds. The pom excludes that group by default, so the quick suite
 never waits on MySQL.
@@ -211,13 +212,35 @@ screening, opens the film form on **New film**, closes it on **Cancel**, and tur
 taken slot into the screen-and-time refusal without adding a row, and that the Reports
 screen opens from the admin rail, switches to occupancy, loads a console preset, runs a
 read query, refuses a DELETE without leaving rows behind, and opens and closes the shift
-summary. Twenty-four tests, about twenty seconds, a display required.
+summary. Twenty-five tests, about twenty seconds, a display required.
 
 ### Running the app
 
 ```bash
 mvn javafx:run
 ```
+
+### Standalone Application Packaging
+
+Build the self-contained jar once on a machine with Maven:
+
+```bash
+mvn clean package
+```
+
+The result is `target/cinebook-1.0.0.jar` — JavaFX, its native DLLs, the MySQL driver,
+the bundled Archivo fonts and every resource inside one file. On target client machines only
+**Java 21 or newer** and the project folder are needed; Maven and an internet connection
+are not.
+
+1. Copy `app.properties.example` to `app.properties` next to `run.bat` and fill in
+   `jdbc.password`.
+2. Double-click **`run.bat`**.
+
+The jar deliberately contains no `app.properties`: the password stays in the local file
+and is never baked into an artifact you hand in. `run.bat` checks for the jar, the config
+and Java 21 before starting, and returns a readable message instead of a silent failure.
+The packaged build has [its own demo script](docs/DEMO.md).
 
 Sign in with one of the two seeded accounts: `operator / operator123` (lands on Schedule) or
 `admin / admin123` (lands on Reports, with Schedule, Bookings and Programme in the rail). Those are
@@ -262,9 +285,11 @@ tabs, not in them: it opens the signed-in clerk's Z-report — bookings, ticket 
 take, the payment split, and refunds counted against the clerk who cancelled.
 
 The window needs 1280 × 720 at minimum. Renders of the current build are in
-`docs/screens/`: `ui-login.png`, `ui-shell-operator.png`, `ui-seatmap.png`,
+`docs/screens/` — one for every screen: `ui-login.png`, `ui-shell-operator.png`
+(Schedule), `ui-shell-admin.png` (the admin's Reports landing), `ui-seatmap.png`,
 `ui-checkout.png` (the held seats and the food grid), `ui-checkout-payment.png` (the
-payment row) and `ui-receipt.png` (the paid stub), plus `ui-shell-admin.png`.
+payment row), `ui-receipt.png` (the paid stub), `ui-bookings.png` and
+`ui-programme.png`. The six-minute run-through is in [docs/DEMO.md](docs/DEMO.md).
 
 ### Printing the schedule without a UI
 
@@ -369,9 +394,9 @@ ADVISORY  all 13 recorded result sets match this database
 ```
 
 This one is **advisory and always exits 0** — it re-runs the queries, names any whose
-rows have changed, and skips cleanly when there is no server or no `MYSQL_PWD`. A
-submission check that runs it can never fail because a snapshot is a few days old;
-only `--check` is allowed to fail, and only on a real inconsistency.
+rows have changed, and skips cleanly when there is no server or no `MYSQL_PWD`. This
+check runs as a non-breaking diagnostic; only `--check` fails the build on an actual
+schema drift or data inconsistency.
 
 `db/00_setup.sql` is the one-shot script (01 + 02 + 03 + 04 in order). It is
 built, not edited:
@@ -381,7 +406,7 @@ python tools/buildsetup.py          # rebuild the bundle
 python tools/buildsetup.py --check  # verify it matches its four parts
 ```
 
-`querydoc.py` refuses to document anything the bundle does not contain, so a
+`tools/querydoc.py` refuses to document anything the bundle does not contain, so a
 stale `00_setup.sql` fails the docs build rather than shipping silently.
 
 No MySQL needed to catch the mistakes MySQL would reject. `tools/sqlcheck.py`
@@ -404,21 +429,21 @@ passwords re-hashed from their salts.
 
 ---
 
-## Query → rubric mapping
+## Business & Analytical Queries
 
-Your lab sheet uses five recurring patterns across all 39 projects. All five are
-answered here:
+The database ships with 14 production queries covering operational ticketing, revenue analytics,
+and audit reconciliation:
 
-| Pattern | Query in `04_queries.sql` |
+| Category | Query in `04_queries.sql` |
 |---|---|
-| List all X, sorted | 1 — upcoming screenings with seats left |
-| Count per category | 2 — bookings and money per screen (`GROUP BY`) |
-| 3-table detail join | 3 — booking + customer + movie + seat + seller |
-| No activity in last N months | 4 — films not screened in 6 months (`LEFT JOIN … IS NULL`) |
-| Top 3 by aggregate | 5 — highest grossing films (`ORDER BY … LIMIT 3`) |
-| *Examiner follow-up* | 6 `HAVING`, 7 `NOT EXISTS`, 8 three-way money reconciliation, 9 window function, 10 view, 11 `LEFT JOIN … IS NULL` |
-| *Food & beverage* | 12 — ticket versus F&B revenue per film, without a fan-out |
-| *Shift close* | 13 — the Z-report: taken and refunded, per clerk, per day |
+| Active Inventory | 1 — upcoming screenings with remaining seat availability |
+| Category Breakdown | 2 — bookings and revenue by auditorium (`GROUP BY`) |
+| Multi-Entity Detail | 3 — itemized sale details (booking + customer + movie + seat + clerk) |
+| Dormancy Analysis | 4 — films with no screenings in the past 6 months (`LEFT JOIN … IS NULL`) |
+| Leaderboards | 5 — highest grossing films by ticket sales (`ORDER BY … LIMIT 3`) |
+| Advanced Analytics | 6 `HAVING` threshold filter, 7 `NOT EXISTS` unbooked seats, 8 three-way money reconciliation, 9 ranking window functions, 10 reporting view, 11 customer dormancy |
+| Non-Inflated Aggregation | 12 — ticket vs F&B split without Cartesian join fan-out |
+| Daily Till Reconciliation | 13 — shift Z-report: collected vs refunded per clerk |
 
 ---
 
@@ -432,6 +457,7 @@ answered here:
 | `docs/TESTS.md` | Integrity test log proving constraint and trigger refusals |
 | `docs/OOP.md` | Class model, layering rules, and OOP concept coverage |
 | `docs/class-diagram-*.svg` | Architectural class diagrams (domain model and layer boundaries) |
-| `db/viva-queries.sql` | 21 self-contained blocks to run in Workbench during presentation |
+| `docs/DEMO.md` | Step-by-step interactive demonstration walkthrough and operational runbook |
+| `db/viva-queries.sql` | 21 self-contained verification queries for database inspections and constraint testing |
 | `tools/sqlcheck.py` | Offline proof that the queries and seed match the schema |
 

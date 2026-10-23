@@ -89,8 +89,8 @@ public final class CineBookApp extends Application {
         Label message = new Label(detail);
         message.setWrapText(true);
         message.setMaxWidth(560);
-        Label hint = new Label("Copy src/main/resources/app.properties.example, fill in "
-                + "jdbc.password, and run again.");
+        Label hint = new Label("Copy app.properties.example to app.properties in the "
+                + "project root, fill in jdbc.password, and run again.");
         hint.getStyleClass().add("muted");
         hint.setWrapText(true);
         hint.setMaxWidth(560);

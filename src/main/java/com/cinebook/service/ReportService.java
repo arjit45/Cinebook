@@ -27,8 +27,8 @@ import java.util.Objects;
  *
  * <p>The console is deliberately read-only. The application account has DML
  * rights, so the guard is not the only defence, but refusing a DELETE here is
- * what keeps a viva demonstration from becoming an accident. DML and DDL belong
- * in Workbench, where the person typing knows they are changing the database.</p>
+ * what prevents accidental data loss during live queries. DML and DDL belong
+ * in administrative tools, where the person typing knows they are changing the database.</p>
  */
 public final class ReportService {
 

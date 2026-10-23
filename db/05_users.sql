@@ -23,10 +23,10 @@
 --  not on the whole schema.
 -- ============================================================
 
--- Replace CHANGE_ME with the password you put in
--- src/main/resources/app.properties. That file is gitignored; this
--- one is not, so the value here stays a placeholder: the two must
--- match, and only one of them is allowed to be committed.
+-- Replace CHANGE_ME with the password you put in app.properties
+-- next to run.bat. That file is gitignored; this one is not, so
+-- the value here stays a placeholder: the two must match, and only
+-- one of them is allowed to be committed.
 DROP USER IF EXISTS 'cinebook_app'@'localhost';
 
 CREATE USER 'cinebook_app'@'localhost' IDENTIFIED BY 'CHANGE_ME';
@@ -51,11 +51,11 @@ FLUSH PRIVILEGES;
 -- means the account has more rights than this section claims.
 SHOW GRANTS FOR 'cinebook_app'@'localhost';
 
--- Prove the missing right, in the viva, on purpose:
+-- Prove the least-privilege boundary on purpose:
 --
 --     mysql -u cinebook_app -p cinebook -e "DROP TABLE ticket;"
 --     ERROR 1142 (42000): DROP command denied to user
 --                         'cinebook_app'@'localhost'
 --
--- That error is the demonstration. The application cannot drop a
--- table even if its own code tells it to.
+-- That error demonstrates least privilege enforcement: the application
+-- account cannot drop a table even if its own code tells it to.

@@ -554,8 +554,8 @@ def render_queries(intro_notes, questions, caps=None):
     for para in paragraphs(intro_notes):
         w(para + "\n")
 
-    w("\n## The five patterns\n")
-    w("| # | Lab-sheet request | What this query returns |")
+    w("\n## Core Operational Patterns\n")
+    w("| # | Business Requirement | What this query returns |")
     w("|---|---|---|")
     for q in questions:
         if re.fullmatch(r"[1-5]", q["number"]):

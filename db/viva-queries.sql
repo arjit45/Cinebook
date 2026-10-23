@@ -23,7 +23,7 @@ USE cinebook;
 
 -- ============================================================
 -- BLOCK 00  --  Baseline. Read this out loud, then forget it.
---              It tells the examiner what state you started from.
+--              Confirms the initial baseline row counts of the seeded database.
 -- ============================================================
 SELECT 'movie'              AS tbl, COUNT(*) AS rows FROM movie
 UNION ALL SELECT 'screen',           COUNT(*) FROM screen

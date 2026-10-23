@@ -1,17 +1,17 @@
-# CineBook — OOP coverage
+# CineBook — Object-Oriented Architecture & Design Patterns
 
 The class model itself — the package layout, the rule that keeps the layers apart, where
 pricing lives, and why there is no discount strategy — is **`docs/PRD.md` §6**. Those are
-design decisions, and they belong in the plan.
+architectural design decisions, and they govern the application structure.
 
-This file is the other half: which graded concept lives where, the three patterns that
-are worth more than a name, and what the OOP report has to contain.
+This document details the concrete object-oriented concepts implemented across the system,
+the key GoF design patterns in use, and the architectural boundaries of the codebase.
 
 ---
 
-## 1. Coverage — every line is a viva answer
+## 1. Object-Oriented Principles & Language Features
 
-| Concept | Where it lives |
+| Concept | Implementation in CineBook |
 |---|---|
 | Encapsulation | `Booking` exposes `addSeat()`, never `setTickets()`; totals are derived, not settable |
 | Inheritance | `StaffUser` → `Administrator`, `BoxOfficeOperator`; `Seat` → `RegularSeat`, `PremiumSeat`, `ReclinerSeat` |
@@ -28,14 +28,14 @@ are worth more than a name, and what the OOP report has to contain.
 | File I/O | `ReceiptWriter` writes the ticket stub to disk |
 | Patterns | Singleton (`Db`), DAO, simple factory (`Seat.of`), Strategy (`ReportQuery`, one per report tab), Observer (JavaFX `textProperty`/`valueProperty` listeners) |
 
-Each row is one sentence away from being a paragraph an examiner can check in the code.
-That sentence is what the report needs; the table alone is what the marking scheme gets.
+This matrix maps language features to specific classes, ensuring strong adherence to
+SOLID design principles, clean encapsulation, and robust exception boundaries.
 
 ---
 
-## 2. Three patterns worth more than a mention
+## 2. Key Architectural Design Patterns
 
-These are the ones usually only *named* in student projects, so have the mechanism ready:
+The core design patterns that structure the application runtime:
 
 - **Strategy, `ReportQuery`.** One implementation per report tab, each carrying its own
   SQL and its own row mapper. The Reports screen iterates a `List<ReportQuery>`, so adding
@@ -53,9 +53,11 @@ These are the ones usually only *named* in student projects, so have the mechani
 
 ---
 
-## 3. What the OOP report has to contain
+## 3. Architecture Diagrams & Verification
 
-Section by section, with the artifact behind each one, the OOP course report documents
-the coverage table above, expanded with a sentence of evidence per row, the
-two generated class diagrams (`docs/class-diagram-domain.svg`,
-`docs/class-diagram-layers.svg`), and the test results from `docs/PRD.md` §14.
+The class structure and layering boundaries are formally mapped in the architectural diagrams:
+
+- **Domain Model**: `docs/class-diagram-domain.svg`
+- **Layer Boundaries**: `docs/class-diagram-layers.svg`
+- **Verification Suites**: Covered by JUnit 5 suites documented in `docs/PRD.md` §14.
+

@@ -78,7 +78,7 @@
       <!--
         Dev launch: `mvn javafx:run`. The launcher class does NOT extend
         Application (docs/PRD.md §13.4) so the shaded jar starts on a machine
-        with no JavaFX modules on the path. Both arrive in phase 2.
+        with no JavaFX modules on the path.
       -->
       <plugin>
         <groupId>org.openjfx</groupId>
@@ -87,6 +87,46 @@
         <configuration>
           <mainClass>com.cinebook.ui.Launcher</mainClass>
         </configuration>
+      </plugin>
+
+      <!--
+        Lab launch: one runnable jar with the JavaFX natives and the MySQL
+        driver inside it. app.properties is deliberately left out of the
+        artifact; the real password stays in the local file and run.bat
+        reads it from the working directory (docs/PRD.md §13.4).
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.5.3</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>com.cinebook.ui.Launcher</mainClass>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              </transformers>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>app.properties</exclude>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

@@ -20,8 +20,8 @@
 --  Engine      : MySQL 8.0  /  InnoDB
 -- ============================================================
 --
---  Design notes for the viva
---  -------------------------
+--  Core Architectural Decisions
+--  ----------------------------
 --  * Twelve tables. Two of them are associative entities with
 --    their own attributes:
 --        ticket             (booking_id, seat_id)  + price
@@ -679,10 +679,9 @@ UNION ALL SELECT 'payment',             COUNT(*) FROM payment;
 --  CineBook  --  File 3 of 5 : VIEWS, TRIGGER, STORED PROCEDURE
 --  Run AFTER 02_seed.sql
 --
---  These are the "extra credit" objects. If the examiner asks
---  what a view is for: it is a named query, so the same
---  occupancy calculation is not copied into five different
---  reports and quietly drifting apart.
+--  Database objects: Views, Audit Trigger, and Atomic Booking Procedure.
+--  Views encapsulate common query logic so the same occupancy calculation
+--  is not copied into multiple reports and quietly drifting apart.
 -- ============================================================
 USE cinebook;
 
@@ -844,10 +843,10 @@ DELIMITER ;
 --  CineBook  --  File 4 of 5 : REPORT QUERIES
 --  Run AFTER 03_objects.sql
 --
---  Queries 1-5 are the five patterns your lab sheet uses for
---  every project. Queries 6-13 are the follow-ups an examiner
---  is likely to invent on the spot; 14 is the transaction drill
---  you walk through on a HELD booking during the viva.
+--  Queries 1-5 cover baseline operational cataloguing and aggregation.
+--  Queries 6-13 cover advanced business reporting, reconciliation,
+--  and analytical audits; 14 is the atomic transaction drill
+--  walkthrough on a HELD booking.
 --
 --  One recurring trap, visible in 2, 5 and 12: a booking has many
 --  tickets AND many food lines, so joining both in one statement
@@ -987,8 +986,7 @@ ORDER BY total_spent DESC;
 
 -- ============================================================
 -- 7. Same answer as Pattern 4, written with NOT EXISTS.
---    Worth showing both -- the examiner often asks for the
---    other form.
+--    Demonstrates relational completeness and alternative query strategy.
 -- ============================================================
 SELECT m.movie_id, m.title
 FROM movie m
@@ -1126,7 +1124,7 @@ WHERE cancelled_by_staff_id = @staff_id
 
 
 -- ============================================================
--- 14. TRANSACTION demo for the viva.
+-- 14. TRANSACTION drill — Manual verification of atomic booking confirmation.
 --     Run these by hand on a HELD booking:
 --
 --       SELECT booking_id, status, total_amount

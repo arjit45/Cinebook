@@ -4,8 +4,8 @@
 --  Engine      : MySQL 8.0  /  InnoDB
 -- ============================================================
 --
---  Design notes for the viva
---  -------------------------
+--  Core Architectural Decisions
+--  ----------------------------
 --  * Twelve tables. Two of them are associative entities with
 --    their own attributes:
 --        ticket             (booking_id, seat_id)  + price

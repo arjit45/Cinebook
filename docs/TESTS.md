@@ -71,7 +71,7 @@ These produce numbers to read rather than a constraint to prove.
 | 6 | HAVING — loyal customers (more than 3 confirmed bookings). |
 | 9 | Window function — rank films by ticket revenue |
 | 10 | Occupancy view — how full is each remaining screening? |
-| 14 | TRANSACTION demo for the viva. |
+| 14 | TRANSACTION drill — Manual verification of atomic booking confirmation. |
 
 
 ## The transaction drill

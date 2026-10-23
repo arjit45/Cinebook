@@ -2,10 +2,9 @@
 --  CineBook  --  File 3 of 5 : VIEWS, TRIGGER, STORED PROCEDURE
 --  Run AFTER 02_seed.sql
 --
---  These are the "extra credit" objects. If the examiner asks
---  what a view is for: it is a named query, so the same
---  occupancy calculation is not copied into five different
---  reports and quietly drifting apart.
+--  Database objects: Views, Audit Trigger, and Atomic Booking Procedure.
+--  Views encapsulate common query logic so the same occupancy calculation
+--  is not copied into multiple reports and quietly drifting apart.
 -- ============================================================
 USE cinebook;
 

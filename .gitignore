@@ -32,12 +32,15 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
-# Exam prep & report notes (kept local)
+# Local study & design drafts (kept local)
 docs/REPORT.md
 docs/VIVA.md
 
-# ER diagrams (to be drawn in ERDPlus, not generated)
+# ER diagram drafts (kept local)
 docs/ER.drawio
 docs/ER.svg
 docs/ER.png
 docs/ERDPlus.md
+
+# Local test helpers
+src/test/java/com/cinebook/ui/TempCaptureScreensTest.java
