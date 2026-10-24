@@ -78,6 +78,13 @@ public final class BookingService {
         if (showtime == null) {
             throw new ValidationException("A hold needs a screening.");
         }
+        if (!LocalDateTime.now().isBefore(showtime.startsAt())) {
+            // Once the film is on, the seats are not inventory any more. The schedule
+            // marks these rows STARTED, but a map left open past the hour must not be
+            // able to write a booking the auditorium can no longer honour.
+            throw new ValidationException(
+                    "This screening has already started — tickets can no longer be sold.");
+        }
         if (soldBy == null) {
             throw new ValidationException("A hold needs the signed-in staff member.");
         }

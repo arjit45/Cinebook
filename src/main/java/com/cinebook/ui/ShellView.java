@@ -6,6 +6,8 @@ import com.cinebook.model.Showtime;
 import com.cinebook.model.StaffUser;
 import com.cinebook.service.AuthService;
 import com.cinebook.util.Db;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -21,9 +23,13 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import java.sql.SQLException;
+import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -57,6 +63,12 @@ public final class ShellView {
     private final Runnable onSignOut;
 
     private final BorderPane root = new BorderPane();
+    /**
+     * How often the open day re-checks whether a screening has come on. Fifteen
+     * seconds is well inside a minute — the smallest unit the schedule prints —
+     * and the check itself reads only memory, never the database.
+     */
+    private static final Duration STARTED_TICK = Duration.ofSeconds(15);
     private final Label title = new Label();
     private final Label meta = new Label();
     private final VBox body = new VBox(10);
@@ -66,18 +78,73 @@ public final class ShellView {
     private final FlowPane dateStrip = new FlowPane(8, 8);
     private final VBox dayDetail = new VBox(10);
     private Map<LocalDate, List<Showtime>> scheduleByDate = new LinkedHashMap<>();
+    /** What each rendered row believed about its screening, keyed by showtime id. */
+    private final Map<Integer, Boolean> startedByShowtime = new HashMap<>();
     private LocalDate selectedDay;
+    private boolean scheduleVisible;
+    private final Clock clock;
+    private final Timeline startedTicker;
     private ScrollPane contentScroll;
     private VBox scheduleCentre;
 
     public ShellView(AuthService auth, StaffUser user, Runnable onSignOut) {
+        this(auth, user, onSignOut, STARTED_TICK, Clock.systemDefaultZone());
+    }
+
+    /**
+     * The seam the flip test needs: a tick short enough to wait for, and a clock the
+     * test moves by hand so "the film has started" arrives on cue rather than at 13:15.
+     */
+    ShellView(AuthService auth, StaffUser user, Runnable onSignOut,
+              Duration startedTick, Clock clock) {
         this.auth = auth;
         this.user = user;
         this.onSignOut = onSignOut;
+        this.clock = clock;
         build();
         // The role decides the landing screen; the rail only offers the sections it
         // can reach. Administrator.homeScreen() is Reports, operator is Schedule.
         select(user.homeScreen());
+        startedTicker = playStartedTicker(startedTick);
+    }
+
+    /** Stops the schedule's started-check, so a test's short tick does not outlive it. */
+    void stopStartedTicker() {
+        startedTicker.stop();
+    }
+
+    private Timeline playStartedTicker(Duration tick) {
+        Timeline timeline = new Timeline(new KeyFrame(
+                javafx.util.Duration.millis(Math.max(50, tick.toMillis())),
+                event -> refreshStartedRows()));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
+        return timeline;
+    }
+
+    /**
+     * Re-renders the open day the moment one of its screenings comes on, so the slate
+     * cannot sit there offering seats for a film that is already running. Only a real
+     * change of state triggers the rebuild: a row that still reads the way it was
+     * drawn is left alone, so the tick costs one list walk and the day does not flash.
+     */
+    private void refreshStartedRows() {
+        if (!scheduleVisible || selectedDay == null) {
+            return;
+        }
+        for (Showtime show : scheduleByDate.getOrDefault(selectedDay, List.of())) {
+            boolean started = isStarted(show);
+            // An unknown row means the day has not been drawn yet; assume it disagrees
+            // so the first pass after a rebuild always reconciles.
+            if (startedByShowtime.getOrDefault(show.showtimeId(), !started) != started) {
+                renderDay();
+                return;
+            }
+        }
+    }
+
+    private boolean isStarted(Showtime show) {
+        return !LocalDateTime.now(clock).isBefore(show.startsAt());
     }
 
     public Parent root() {
@@ -171,6 +238,7 @@ public final class ShellView {
         }
         title.setText(section);
         body.getChildren().clear();
+        scheduleVisible = section.equals("Schedule");
         if (contentScroll != null) {
             contentScroll.setVvalue(0);
         }
@@ -213,6 +281,7 @@ public final class ShellView {
             // never printed as one long column: select a panel and only that day shows.
             scheduleByDate = shows.stream().collect(Collectors
                     .groupingBy(Showtime::showDate, LinkedHashMap::new, Collectors.toList()));
+            startedByShowtime.clear();
             // Keep the day the person was looking at when the seat map closes; only a
             // first visit, or a day that no longer has screenings, falls back to today.
             if (selectedDay == null || !scheduleByDate.containsKey(selectedDay)) {
@@ -310,7 +379,15 @@ public final class ShellView {
             }
         }
         dayDetail.getChildren().setAll(headerRow());
-        for (Showtime show : scheduleByDate.getOrDefault(selectedDay, List.of())) {
+        List<Showtime> dayShows = scheduleByDate.getOrDefault(selectedDay, List.of());
+        if (dayShows.isEmpty()) {
+            Label empty = new Label("No shows scheduled for this date. Try another day.");
+            empty.getStyleClass().add("muted");
+            empty.setPadding(new Insets(30, 0, 30, 0));
+            dayDetail.getChildren().add(empty);
+            return;
+        }
+        for (Showtime show : dayShows) {
             dayDetail.getChildren().add(scheduleRow(show));
         }
     }
@@ -321,21 +398,39 @@ public final class ShellView {
      * seat map.
      */
     private Button scheduleRow(Showtime show) {
+        // A screening that is already on stays on the day's slate, muted and closed,
+        // so the clerk sees the time and why it is gone instead of it vanishing
+        // mid-day. The Free column carries the state because that is the column that
+        // would otherwise read as an invitation to sell.
+        boolean started = isStarted(show);
+        startedByShowtime.put(show.showtimeId(), started);
+
         HBox cells = new HBox(16);
         Label price = cell(show.basePrice().toPlainString(), 90, false);
         price.getStyleClass().add("money");
+        Label status = cell(started
+                ? "STARTED"
+                : String.valueOf(show.screen().seatsAvailable(show)), 70, false);
+        if (started) {
+            status.getStyleClass().add("started-flag");
+        }
         cells.getChildren().addAll(
                 cell(show.movie().title(), 320, false),
                 cell(show.screen().name(), 90, false),
                 cell(TIME.format(show.startsAt()), 130, false),
                 price,
-                cell(String.valueOf(show.screen().seatsAvailable(show)), 70, false));
+                status);
 
         Button row = new Button();
         row.setGraphic(cells);
         row.setMaxWidth(Double.MAX_VALUE);
         row.setAlignment(Pos.CENTER_LEFT);
         row.getStyleClass().add("schedule-row");
+        if (started) {
+            row.getStyleClass().add("schedule-row-started");
+            row.setDisable(true);
+            return row;
+        }
         row.setOnAction(event -> openSeatMap(show));
         return row;
     }

@@ -616,7 +616,7 @@ def render_queries(intro_notes, questions, caps=None):
 # observations must be taken again -- which is why they live beside the SQL
 # rather than in free prose in the markdown.
 RUN_VERSION = "8.0.46"
-RUN_DATE = "2026-10-20"
+RUN_DATE = "2026-10-24"
 
 
 def render_tests(questions, select_like, objects):
@@ -659,16 +659,16 @@ def render_tests(questions, select_like, objects):
     rows = [
         ("2", "Ticket and food revenue are reported separately per auditorium.",
          "`total_revenue = ticket_revenue + fnb_revenue` on every row.",
-         "4 rows, 0 of them breaking the identity (Audi 1 41 620.00 = "
-         "14 940.00 + 26 680.00; the other three have no food)."),
+         "4 rows, 0 of them breaking the identity (Audi 1 44 672.00 = "
+         "17 992.00 + 26 680.00; the other three have no food)."),
         ("4", "A film screened within the last six months must not appear.",
          "Only dormant films are listed; `days_dormant` is 9999 when never "
          "shown (the COALESCE sentinel, not a NULL).",
-         "2 rows: Blue Meridian 200 days, Static Bloom 204. Zero of them "
-         "screened inside six months."),
+         "1 row: Static Bloom, 204 days. Blue Meridian dropped out because it "
+         "now has a screening on 2026-10-25."),
         ("7", "The same rule as query 4, written with `NOT EXISTS`.",
          "**Identical rows to query 4** \u2014 two forms, one answer.",
-         "2 rows, `movie_id` set 7,8 \u2014 the same set query 4 returned."),
+         "1 row, `movie_id` 8 \u2014 the same set query 4 returned."),
         ("8", "The three money columns agree: "
               "`total = ticket + fnb`, tickets match `SUM(ticket.price)`, "
               "and the payment matches the total.",
@@ -678,21 +678,21 @@ def render_tests(questions, select_like, objects):
                "is found.",
          "A seat with a `ticket` row must **not** appear; a fully sold screen "
          "returns nothing.",
-         "372 of 384 seats unsold; 0 of those carry a ticket, and "
-         "372 + 12 sold = 384."),
+         "151 of 384 seats never sold (the query prints the first 15, all of "
+         "Audi 1); 0 of those carry a ticket, and 151 + 233 sold = 384."),
         ("12", "Food revenue is isolated from ticket revenue per film, with no "
                "row multiplication.",
          "Each film appears at most once; a zero ticket base yields NULL from "
          "`NULLIF`, not a division error.",
-         "6 rows, 6 distinct titles. The naive double join on the same "
-         "bookings yields 19 910.00 instead of 14 940.00 (60 tickets "
+         "6 rows, 6 distinct titles. The naive ticket-by-food join on the same "
+         "Audi 1 bookings yields 24 014.00 instead of 17 992.00 (60 tickets "
          "counted as 80 rows)."),
         ("13", "A clerk's takings and a clerk's refunds are separable by role.",
          "The refund half is non-zero for a clerk who cancelled a sale someone "
          "else rang up \u2014 proof it keys on `cancelled_by_staff_id`.",
-         "Clerk 2: 1 refund, 234.00, on a sale clerk 1 rang up. Keyed on "
-         "`sold_by_staff_id` it would be 0 for clerk 2 and 234.00 for "
-         "clerk 1 \u2014 the wrong clerk."),
+         "Clerk 1 today: 4 payments, 1 634.00 gross, 0 refunds \u2014 nothing was "
+         "cancelled today. The 8 refunds whose cancelling clerk differs from the "
+         "selling clerk (1 769.00) are what that key has to get right."),
     ]
 
     known = {q["number"] for q in questions}

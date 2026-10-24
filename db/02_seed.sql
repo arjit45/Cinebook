@@ -211,8 +211,20 @@ WHERE nums.n < 300;
 -- 1. Tickets: one seat per booking.
 --    bs.rn = this booking's position within its own showtime
 --    sn.sn = this seat's position within its own screen
---    Matching the two guarantees each showtime gets distinct seats.
---    Price = showtime base price scaled by seat class.
+--    The seat is deliberately NOT the rn-th seat of the screen:
+--    matching rn to sn would stack every screening's sales into
+--    row A, and a demo where the house is always sold from the
+--    front row teaches the wrong thing about the seat map. The
+--    rank is scattered instead:
+--        seat_rank = MOD(rn * 37 + showtime_id * 17, 96) + 1
+--      * 37 is coprime with the 96 seats of an auditorium, so two
+--        bookings of one screening can never land on one seat —
+--        UNIQUE (showtime_id, seat_id) is never raced by the seed;
+--      * the showtime term walks every screening to a different
+--        part of the house, so across the programme the sold seats
+--        cover rows A..H — regular, premium and recliner — the way
+--        a real house fills up, not a single front row.
+--    Price = showtime base price scaled by the seat actually taken.
 -- ------------------------------------------------------------
 INSERT INTO ticket (booking_id, seat_id, showtime_id, price)
 SELECT bs.booking_id,
@@ -229,7 +241,8 @@ FROM (SELECT b.booking_id, b.showtime_id, s.screen_id,
 JOIN (SELECT seat_id, screen_id, seat_class,
              ROW_NUMBER() OVER (PARTITION BY screen_id ORDER BY seat_id) AS sn
       FROM seat) sn
-  ON sn.screen_id = bs.screen_id AND sn.sn = bs.rn
+  ON sn.screen_id = bs.screen_id
+ AND sn.sn = MOD(bs.rn * 37 + bs.showtime_id * 17, 96) + 1
 JOIN showtime st ON st.showtime_id = bs.showtime_id;
 
 -- ------------------------------------------------------------

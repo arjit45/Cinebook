@@ -38,9 +38,14 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -78,6 +83,41 @@ class LoginFlowTest {
     private record Attempt(StaffUser user, String message, String passwordAfterTyping) {
         boolean refused() {
             return user == null;
+        }
+    }
+
+    /** One schedule row as the test read it: the truth from the clock, then the screen. */
+    private record StartedMark(boolean started, boolean styled, boolean closed, String status) {
+    }
+
+    /** A clock the test moves by hand; the schedule reads every started check from it. */
+    private static final class MutableClock extends Clock {
+        private ZoneId zone = ZoneId.systemDefault();
+        private LocalDateTime now;
+
+        private MutableClock(LocalDateTime now) {
+            this.now = now;
+        }
+
+        void setNow(LocalDateTime when) {
+            this.now = when;
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return zone;
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            MutableClock moved = new MutableClock(now);
+            moved.zone = zone;
+            return moved;
+        }
+
+        @Override
+        public Instant instant() {
+            return now.atZone(zone).toInstant();
         }
     }
 
@@ -190,12 +230,124 @@ class LoginFlowTest {
     }
 
     @Test
+    void aScreeningThatHasStartedIsFlaggedAndClosedOnTheSchedule() {
+        // The rows on screen are today's slate in the DAO's order, so the expectation is
+        // read from the same query the shell runs, on the FX thread beside the render —
+        // the clock must not be able to move between the truth and the row it is checked
+        // against. A started row stays on the slate (the clerk still sees the time) but
+        // is styled, disabled and flagged STARTED instead of showing a free-seat count.
+        List<StartedMark> marks = runOnFx(() -> {
+            AuthService auth = new AuthService(new StaffDao(DB));
+            StaffUser operator = signIn(auth, "operator", "operator123").user();
+            Parent shell = new ShellView(auth, operator, () -> { }).root();
+            attach(shell);
+
+            List<Showtime> todays = new ShowtimeDao(DB).upcoming(40).stream()
+                    .filter(show -> show.showDate().equals(LocalDate.now()))
+                    .toList();
+            List<Button> rows = shell.lookupAll(".schedule-row").stream()
+                    .map(node -> (Button) node).toList();
+            assertEquals(todays.size(), rows.size(), "today's slate must be listed row for row");
+
+            List<StartedMark> out = new ArrayList<>();
+            for (int i = 0; i < rows.size(); i++) {
+                Button row = rows.get(i);
+                Label status = (Label) ((HBox) row.getGraphic())
+                        .getChildrenUnmodifiable().get(4);
+                out.add(new StartedMark(
+                        !LocalDateTime.now().isBefore(todays.get(i).startsAt()),
+                        row.getStyleClass().contains("schedule-row-started"),
+                        row.isDisabled(),
+                        status.getText()));
+            }
+            return out;
+        });
+
+        assertFalse(marks.isEmpty(), "the seed schedules screenings today");
+        for (int i = 0; i < marks.size(); i++) {
+            StartedMark mark = marks.get(i);
+            assertEquals(mark.started(), mark.styled(),
+                    "row " + i + " must carry the started style iff the film is on");
+            assertEquals(mark.started(), mark.closed(),
+                    "row " + i + " must be closed to clicks iff the film is on");
+            if (mark.started()) {
+                assertEquals("STARTED", mark.status(),
+                        "row " + i + " must say STARTED, not a free-seat count");
+            } else {
+                assertTrue(mark.status().matches("\\d+"),
+                        "row " + i + " must still show seats free: " + mark.status());
+            }
+        }
+    }
+
+    @Test
+    void aScreeningThatComesOnFlipsItsRowToStartedWithoutReselectingTheDay() {
+        // The clock starts before today's first screening, so every row is open, then is
+        // moved past the last one. No date panel is pressed and nothing re-renders by
+        // hand: the schedule's own ticker must notice and repaint the day in place.
+        MutableClock clock = new MutableClock(LocalDate.now().atStartOfDay());
+        ShellView[] view = new ShellView[1];
+        try {
+            runOnFx(() -> {
+                AuthService auth = new AuthService(new StaffDao(DB));
+                StaffUser operator = signIn(auth, "operator", "operator123").user();
+                view[0] = new ShellView(auth, operator, () -> { },
+                        Duration.ofMillis(100), clock);
+                Parent shell = view[0].root();
+                attach(shell);
+                assertNotNull(shell.lookup(".schedule-row"), "today's slate must be drawn");
+                assertEquals(0, shell.lookupAll(".schedule-row-started").size(),
+                        "before the hour every row on today's slate is still open");
+
+                clock.setNow(LocalDate.now().atTime(23, 59));
+                return null;
+            });
+
+            awaitFx(() -> {
+                settle(view[0].root());
+                return !view[0].root().lookupAll(".schedule-row-started").isEmpty();
+            });
+
+            runOnFx(() -> {
+                Parent shell = view[0].root();
+                settle(shell);
+                List<Button> rows = shell.lookupAll(".schedule-row").stream()
+                        .map(node -> (Button) node).toList();
+                assertFalse(rows.isEmpty(), "today has screenings to flip");
+                for (Button row : rows) {
+                    assertTrue(row.isDisabled(),
+                            "a row whose film has come on must close itself");
+                    Label status = (Label) ((HBox) row.getGraphic())
+                            .getChildrenUnmodifiable().get(4);
+                    assertEquals("STARTED", status.getText(),
+                            "the Free column must stop offering seats");
+                }
+                assertEquals(1, shell.lookupAll(".date-panel.selected").size(),
+                        "the flip must happen on the day the clerk was already looking at");
+                return null;
+            });
+        } finally {
+            ShellView shell = view[0];
+            if (shell != null) {
+                // The test's 100 ms tick must not outlive it and repaint rows under a
+                // later test that happens to be mid-interaction.
+                runOnFx(() -> {
+                    shell.stopStartedTicker();
+                    return null;
+                });
+            }
+        }
+    }
+
+    @Test
     void openingAScreeningShowsItsSeatMapAndBackKeepsTheDay() {
         runOnFx(() -> {
             AuthService auth = new AuthService(new StaffDao(DB));
             StaffUser operator = signIn(auth, "operator", "operator123").user();
             Parent shell = new ShellView(auth, operator, () -> { }).root();
-            attach(shell);
+            // The documented minimum window: the seat status must still sit above the
+            // booking bar here, not be clipped under it.
+            attach(shell, 720);
 
             // Open a day that is not today, so "back" has a date worth keeping.
             Button panel = shell.lookupAll(".date-panel").stream()
@@ -245,6 +397,13 @@ class LoginFlowTest {
                     "the report must carry the seat's price");
             assertTrue(report.contains("picked for preview"),
                     "a pick must say it is not a hold yet");
+            Node statusNode = shell.lookup(".seat-status");
+            Node bookingBar = shell.lookup(".booking-bar");
+            assertNotNull(statusNode, "the seat map must carry its status line");
+            assertNotNull(bookingBar, "the seat map must carry the booking bar");
+            assertTrue(statusNode.localToScene(statusNode.getBoundsInLocal()).getMaxY()
+                            <= bookingBar.localToScene(bookingBar.getBoundsInLocal()).getMinY() + 0.5,
+                    "the seat status must be readable above the booking bar at 1280 x 720");
 
             // The booking footer is the reference's bar: seats, class, total, action.
             Label tally = (Label) shell.lookup(".seat-tally");
@@ -291,6 +450,50 @@ class LoginFlowTest {
             assertEquals(String.valueOf(day.getDayOfMonth()), ((Label) dayLine.getChildren().get(0)).getText());
             return null;
         });
+    }
+
+    @Test
+    void aSoldOutScreeningSaysHouseFullAndKeepsTheMessageOnScreen() throws Exception {
+        Showtime show = new ShowtimeDao(DB).sellable(400).stream()
+                .min(Comparator.comparingInt(Showtime::seatsSold))
+                .orElseThrow(() -> new AssertionError("the seed has a sellable screening"));
+        StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
+        SeatDao seats = new SeatDao(DB);
+        Set<String> soldLabels = seats.soldLabels(show.showtimeId());
+        List<Seat> free = seats.byScreen(show.screen().screenId()).stream()
+                .filter(seat -> !soldLabels.contains(seat.label()))
+                .toList();
+        BookingService.Held held = new BookingService(DB).hold(show, free, operator);
+        try {
+            runOnFx(() -> {
+                Parent map = new SeatMapView(DB, show, operator, () -> { }).root();
+                attach(map, 720);
+
+                Label status = (Label) map.lookup(".seat-status");
+                assertNotNull(status, "the map must carry its status line");
+                assertEquals("House full. Pick another screening.", status.getText(),
+                        "a sold-out screening must say so, not invite a pick that cannot exist");
+                assertTrue(status.getStyleClass().contains("house-full"),
+                        "the full-house notice must be styled as a notice");
+                assertTrue(((Button) map.lookup(".confirm-seats")).isDisabled(),
+                        "with every seat sold there is nothing to hold");
+
+                Node bar = map.lookup(".booking-bar");
+                assertNotNull(bar);
+                assertTrue(status.localToScene(status.getBoundsInLocal()).getMaxY()
+                                <= bar.localToScene(bar.getBoundsInLocal()).getMinY() + 0.5,
+                        "the house-full message must be above the booking bar, not clipped under it");
+
+                Button sold = (Button) map.lookup(".seat-sold");
+                assertNotNull(sold, "a full house must still draw every sold seat");
+                sold.fire();
+                assertTrue(status.getText().contains("already sold"),
+                        "the sold seat must still explain itself: " + status.getText());
+                return null;
+            });
+        } finally {
+            deleteBooking(held.bookingId());
+        }
     }
 
     @Test
@@ -386,6 +589,21 @@ class LoginFlowTest {
                         "a successful hold must open the checkout panel beside the map");
                 assertTrue(((Label) shell.lookup(".checkout-ref")).getText().contains("BK-"),
                         "the panel must name the booking it is selling");
+
+                // The hold owns exactly the seats that committed. A free seat left
+                // clickable would add money to the bar that this booking cannot sell.
+                Button otherFree = shell.lookupAll(".seat").stream()
+                        .map(node -> (Button) node)
+                        .filter(seat -> !seat.getStyleClass().contains("seat-sold"))
+                        .filter(seat -> !seat.getStyleClass().contains("seat-held"))
+                        .findFirst().orElse(null);
+                assertNotNull(otherFree, "the seed must leave an unheld seat to try");
+                assertTrue(otherFree.isDisabled(),
+                        "a hold must freeze every seat it did not take");
+                String tallyBefore = ((Label) shell.lookup(".seat-tally")).getText();
+                otherFree.fire();
+                assertEquals(tallyBefore, ((Label) shell.lookup(".seat-tally")).getText(),
+                        "an unheld seat must not change the bill while checkout is open");
 
                 Label total = (Label) shell.lookup(".checkout-total");
                 assertEquals(0, picked.compareTo(amountIn(total.getText())),
@@ -529,6 +747,14 @@ class LoginFlowTest {
 
                 assertTrue(((Label) shell.lookup(".checkout-held")).getText().startsWith("SOLD SEATS:"),
                         "after payment the heading must stop calling the seats held");
+                String mapStatus = ((Label) shell.lookup(".seat-status")).getText();
+                assertTrue(mapStatus.startsWith("Sold"),
+                        "the seat map must stop calling a paid booking a hold: " + mapStatus);
+                assertTrue(mapStatus.contains(String.format("BK-%04d", held[0])),
+                        "the map's receipt line must name the sale: " + mapStatus);
+                assertTrue(((Button) shell.lookup(".confirm-seats")).getText()
+                                .startsWith("Sold #"),
+                        "the booking bar must call the seats sold once the money is taken");
 
                 Node stub = shell.lookup(".receipt-stub");
                 assertNotNull(stub, "the slip must be its own block in the rail");
@@ -925,6 +1151,8 @@ class LoginFlowTest {
                 String note = message.getText();
                 assertTrue(note.startsWith("Receipt saved to "),
                         "printing must report the file it wrote, not stay silent: " + note);
+                assertTrue(visibleInScene(message),
+                        "the saved path must be visible, not buried under a hidden footer");
                 written[0] = Path.of(note.substring("Receipt saved to ".length()).trim());
                 return null;
             });
@@ -1112,11 +1340,27 @@ class LoginFlowTest {
         return null;
     }
 
-    /** Opens the first screening on the schedule and waits for the map's skin. */
+    /** Opens a screening that is still on sale and waits for the map's skin. */
     private static void openFirstScreening(Parent shell) {
-        ((Button) shell.lookup(".schedule-row")).fire();
-        settle(shell);
-        assertNotNull(shell.lookup(".seat-paper"), "the schedule row must open a seat map");
+        // Late in the day every row on today's slate has started, and a started row is
+        // closed by design — so the test walks the date strip to the first day that
+        // still has an open row. Early in the day that is today, as before.
+        for (Node node : shell.lookupAll(".date-panel")) {
+            ((Button) node).fire();
+            settle(shell);
+            Button row = shell.lookupAll(".schedule-row").stream()
+                    .map(found -> (Button) found)
+                    .filter(found -> !found.isDisabled())
+                    .findFirst().orElse(null);
+            if (row != null) {
+                row.fire();
+                settle(shell);
+                assertNotNull(shell.lookup(".seat-paper"),
+                        "the schedule row must open a seat map");
+                return;
+            }
+        }
+        throw new AssertionError("no day on the schedule offers a screening on sale");
     }
 
     /** A scroll pane's content only joins the graph once its skin has laid out. */
@@ -1273,6 +1517,16 @@ class LoginFlowTest {
     private static String money(BigDecimal amount) {
         String text = amount.setScale(2, RoundingMode.HALF_UP).toPlainString();
         return text.endsWith(".00") ? text.substring(0, text.length() - 3) : text;
+    }
+
+    /** True when no ancestor has been hidden, so the node is actually on screen. */
+    private static boolean visibleInScene(Node node) {
+        for (Node walk = node; walk != null; walk = walk.getParent()) {
+            if (!walk.isVisible()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** True when {@code node} sits inside {@code ancestor}, at any depth. */

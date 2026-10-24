@@ -9,8 +9,16 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -80,7 +88,7 @@ class DbSmokeTest {
      * fail; looping well past {@link Db#POOL_SIZE} proves every handle came back.
      */
     @Test
-    void everyBorrowComesBackToThePool() throws SQLException {
+    void everyBorrowComesBackToThePool() throws Exception {
         for (int i = 0; i < Db.POOL_SIZE * 4; i++) {
             try (Db.Handle handle = connection()) {
                 assertTrue(handle.connection().isValid(2),
@@ -89,6 +97,65 @@ class DbSmokeTest {
         }
         assertEquals(Db.POOL_SIZE, Db.get().idleConnections(),
                 "all connections must be idle again once every handle is closed");
+
+        // The queue is empty both before the pool opens and while every connection
+        // is borrowed. Holding all three proves the fourth caller waits rather than
+        // triggering a second fill() and opening three more connections.
+        ExecutorService workers = Executors.newFixedThreadPool(Db.POOL_SIZE + 1);
+        CountDownLatch acquired = new CountDownLatch(Db.POOL_SIZE);
+        CountDownLatch fourthStarted = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        List<Future<?>> holders = new ArrayList<>();
+        Future<Long> fourth = null;
+        try {
+            for (int i = 0; i < Db.POOL_SIZE; i++) {
+                holders.add(workers.submit(() -> {
+                    try (Db.Handle handle = connection()) {
+                        acquired.countDown();
+                        release.await();
+                    }
+                    return null;
+                }));
+            }
+            assertTrue(acquired.await(10, TimeUnit.SECONDS),
+                    "all three connections must be borrowable before saturation");
+
+            fourth = workers.submit(() -> {
+                fourthStarted.countDown();
+                long started = System.nanoTime();
+                try (Db.Handle handle = connection()) {
+                    assertTrue(handle.connection().isValid(2));
+                    return (System.nanoTime() - started) / 1_000_000;
+                }
+            });
+
+            assertTrue(fourthStarted.await(5, TimeUnit.SECONDS),
+                    "the fourth borrow must start before the wait is measured");
+            Thread.sleep(250);
+            assertFalse(fourth.isDone(),
+                    "a fourth borrow must wait while all three connections are held");
+
+            release.countDown();
+            long waited = fourth.get(5, TimeUnit.SECONDS);
+            assertTrue(waited >= 200,
+                    "the fourth borrow must have waited, not opened a new connection");
+            for (Future<?> holder : holders) {
+                holder.get(5, TimeUnit.SECONDS);
+            }
+            assertEquals(Db.POOL_SIZE, Db.get().idleConnections(),
+                    "saturation must leave exactly three connections in the pool");
+            assertEquals(Db.POOL_SIZE, Db.get().openConnections(),
+                    "a fourth caller must not have opened a fourth connection");
+        } finally {
+            release.countDown();
+            if (fourth != null) {
+                fourth.cancel(true);
+            }
+            for (Future<?> holder : holders) {
+                holder.cancel(true);
+            }
+            workers.shutdownNow();
+        }
     }
 
     @Test

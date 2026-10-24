@@ -61,6 +61,10 @@ public final class ShowtimeDao {
     private static final String PROGRAMME_SQL = SHOW_COLUMNS
             + " WHERE TIMESTAMP(st.show_date, st.start_time) >= NOW()" + ORDER_AND_LIMIT;
 
+    /** What the counter may actually sell: a screening that has not started yet. */
+    private static final String SELLABLE_SQL = SHOW_COLUMNS
+            + " WHERE TIMESTAMP(st.show_date, st.start_time) > NOW()" + ORDER_AND_LIMIT;
+
     private static final String INSERT_SQL = """
             INSERT INTO showtime (movie_id, screen_id, show_date, start_time, base_price)
             VALUES (?, ?, ?, ?, ?)
@@ -82,6 +86,19 @@ public final class ShowtimeDao {
     /** Upcoming screenings for the Programme screen, excluding today's finished slots. */
     public List<Showtime> programme(int limit) throws SQLException {
         return query(PROGRAMME_SQL, limit);
+    }
+
+    /**
+     * Screenings the counter may still sell: strictly after {@code NOW()}, so a
+     * show that starts this second is already gone.
+     *
+     * <p>The schedule keeps started rows on the day's slate so a clerk sees why a
+     * time is no longer openable, but every booking path and every test that
+     * writes a booking draws from this list rather than {@link #upcoming(int)},
+     * which is a display query and deliberately includes today's finished slots.
+     */
+    public List<Showtime> sellable(int limit) throws SQLException {
+        return query(SELLABLE_SQL, limit);
     }
 
     private List<Showtime> query(String sql, int limit) throws SQLException {

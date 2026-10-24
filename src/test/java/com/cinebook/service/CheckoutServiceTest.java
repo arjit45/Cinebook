@@ -73,7 +73,7 @@ class CheckoutServiceTest {
 
     @Test
     void payingWritesThePaymentAndAReceiptThatMatchesTheRows() throws Exception {
-        Showtime show = new ShowtimeDao(DB).upcoming(40).get(0);
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
         List<Seat> picked = freeSeats(show, 2);
         BookingService.Held held = new BookingService(DB).hold(show, picked, operator());
         createdBookings.add(held.bookingId());
@@ -128,7 +128,7 @@ class CheckoutServiceTest {
 
     @Test
     void receiptKeepsThePriceTheItemWasSoldAt() throws Exception {
-        Showtime show = new ShowtimeDao(DB).upcoming(40).get(0);
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
         BookingService.Held held = new BookingService(DB).hold(show,
                 freeSeats(show, 1), operator());
         createdBookings.add(held.bookingId());
@@ -163,7 +163,7 @@ class CheckoutServiceTest {
 
     @Test
     void aSecondPaymentIsRefusedAndLeavesOnePaymentRow() throws Exception {
-        Showtime show = new ShowtimeDao(DB).upcoming(40).get(0);
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
         BookingService.Held held = new BookingService(DB).hold(show,
                 freeSeats(show, 1), operator());
         createdBookings.add(held.bookingId());
@@ -190,7 +190,7 @@ class CheckoutServiceTest {
 
     @Test
     void theClerkCanReplaceTheWalkInGuestBeforePayment() throws Exception {
-        Showtime show = new ShowtimeDao(DB).upcoming(40).get(0);
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
         BookingService.Held held = new BookingService(DB).hold(show,
                 freeSeats(show, 1), operator());
         createdBookings.add(held.bookingId());

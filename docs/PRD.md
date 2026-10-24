@@ -805,6 +805,9 @@ Three critical concurrency rules govern the architecture:
 The internal console is a reporting tool, not an open administrative terminal. It accepts
 `SELECT` · `SHOW` · `EXPLAIN` · `DESCRIBE` only. Writes are not armed from the UI — they stay in
 MySQL Workbench, deliberately, so no toggle can turn the reporting console into a mutation tool.
+The guard tokenizes the statement after removing strings and comments, so comment-separated
+`INTO/**/OUTFILE`, `FOR/**/UPDATE` and `LOCK/**/IN/**/SHARE/**/MODE` forms are refused, as are
+quoted spellings of `LOAD_FILE`.
 
 To demonstrate schema-level integrity enforcement (such as `ERROR 1062` on duplicate bookings, or
 automatic `booking_audit` trigger rows upon status change), statements can also be executed directly
@@ -820,7 +823,7 @@ Re-running `db/00_setup.sql` rebuilds and re-seeds the entire database determini
 The system deliverables are structured and validated across two complementary tracks:
 
 1. **RDBMS Track:** Verified through clean execution of `00_setup.sql`, least-privilege enforcement in `db/05_users.sql`, the fingerprinted query catalogue (`docs/QUERIES.md`), data dictionary (`docs/SCHEMA.md`), and the database integrity test log (`docs/TESTS.md`).
-2. **Java OOP Track:** Verified through the pure unit suite (`mvn test`, 40 tests without database), database integration suite (`mvn test -Dgroups=db`, 51 tests with connection pool validation), and JavaFX UI suite (`mvn test -Dgroups=ui`, 25 tests driving real controls, display required).
+2. **Java OOP Track:** Verified through the pure unit suite (`mvn test`, 42 tests without database), database integration suite (`mvn test -Dgroups=db`, 54 tests with connection pool validation), and JavaFX UI suite (`mvn test -Dgroups=ui`, 28 tests driving real controls, display required).
 
 ---
 
@@ -1044,7 +1047,7 @@ depends on: add a line at today's price, change `concession_item.unit_price`, an
 `showtime.base_price` after a hold and `ticket.price` must not move either. A snapshot
 that can be disturbed by an unrelated `UPDATE` is just a copy.
 
-Eleven areas, 116 tests across the three groups (40 unit, 51 database, 25 UI). Credible,
+Eleven areas, 124 tests across the three groups (42 unit, 54 database, 28 UI). Credible,
 without becoming the project.
 
 ### 14.3 What is deliberately not unit tested

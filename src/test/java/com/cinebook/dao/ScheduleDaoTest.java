@@ -8,7 +8,10 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -95,6 +98,43 @@ class ScheduleDaoTest {
     @Test
     void limitIsHonoured() throws Exception {
         assertEquals(3, new ShowtimeDao(DB).upcoming(3).size());
+    }
+
+    @Test
+    void sellableDropsScreeningsTodayThatHaveAlreadyStarted() throws Exception {
+        // A screening stamped 00:00 today is on by the time any test runs. The display
+        // query must still list it — the schedule keeps the day's slate intact — while
+        // the sellable query must drop it, or the counter would be offered a film that
+        // is already running. Inserted here because the seed's slots are never past:
+        // this is the boundary no seeded row can reach on its own.
+        ShowtimeDao shows = new ShowtimeDao(DB);
+        int showtimeId;
+        try (Db.Handle handle = DB.borrow();
+             Connection connection = handle.connection()) {
+            showtimeId = shows.insert(connection, 1, 1, LocalDate.now(),
+                    LocalTime.of(0, 0), new BigDecimal("199.00"));
+        }
+        try {
+            assertTrue(shows.upcoming(400).stream()
+                            .anyMatch(show -> show.showtimeId() == showtimeId),
+                    "the schedule still lists a screening that started earlier today");
+            assertFalse(shows.sellable(400).stream()
+                            .anyMatch(show -> show.showtimeId() == showtimeId),
+                    "the counter must not be offered a screening that is already on");
+        } finally {
+            deleteScreening(showtimeId);
+        }
+    }
+
+    /** Programme has no delete-screening action, so the test removes its own row. */
+    private static void deleteScreening(int showtimeId) throws Exception {
+        try (Db.Handle handle = DB.borrow();
+             Connection connection = handle.connection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "DELETE FROM showtime WHERE showtime_id = ?")) {
+            statement.setInt(1, showtimeId);
+            statement.executeUpdate();
+        }
     }
 
     @Test

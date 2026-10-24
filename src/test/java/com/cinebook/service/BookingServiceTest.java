@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -77,7 +78,7 @@ class BookingServiceTest {
 
     @Test
     void holdWritesOneBookingWithItsTicketsAndTotals() throws Exception {
-        Showtime show = new ShowtimeDao(DB).upcoming(1).get(0);
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
         List<Seat> picked = freeSeats(show, 2);
         StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
         BigDecimal expected = picked.stream()
@@ -135,8 +136,65 @@ class BookingServiceTest {
     }
 
     @Test
+    void holdTakesAsManySeatsAsPickedFromAnyRowInOneTransaction() throws Exception {
+        // The seed only ever sells row A, so rows C..F are untouched on every screening:
+        // two seats from each of four different rows — eight seats, four rows, one hold.
+        // Neither the service nor the map has a per-row or per-ticket cap; the small
+        // baskets in the demo are the seed's doing, not the app's ceiling.
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
+        StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
+        SeatDao seatDao = new SeatDao(DB);
+        Set<String> sold = seatDao.soldLabels(show.showtimeId());
+        List<Seat> screenSeats = seatDao.byScreen(show.screen().screenId());
+
+        List<Seat> picked = new ArrayList<>();
+        for (char row = 'C'; row <= 'F'; row++) {
+            char wanted = row;
+            picked.addAll(screenSeats.stream()
+                    .filter(seat -> seat.rowLabel() == wanted && !sold.contains(seat.label()))
+                    .limit(2)
+                    .toList());
+        }
+        assertEquals(8, picked.size(), "the seed must leave two free seats in each of C..F");
+        assertEquals(Set.of('C', 'D', 'E', 'F'),
+                picked.stream().map(Seat::rowLabel).collect(Collectors.toSet()),
+                "the basket must span four rows, not one");
+        BigDecimal expected = picked.stream()
+                .map(seat -> seat.priceFor(show))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BookingService.Held held = new BookingService(DB).hold(show, picked, operator);
+        created.add(held.bookingId());
+
+        assertEquals(8, held.seats(), "every seat in the basket is held");
+        assertEquals(0, expected.compareTo(held.total()),
+                "rows C..F mix regular and premium seats; each is priced by class");
+
+        List<String> written = new ArrayList<>();
+        try (Db.Handle handle = DB.borrow();
+             Connection connection = handle.connection();
+             PreparedStatement statement = connection.prepareStatement("""
+                     SELECT CONCAT(se.row_label, se.seat_no) AS label
+                       FROM ticket t
+                       JOIN seat se ON se.seat_id = t.seat_id
+                      WHERE t.booking_id = ?
+                     """)) {
+            statement.setInt(1, held.bookingId());
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    written.add(rows.getString("label"));
+                }
+            }
+        }
+        assertEquals(
+                picked.stream().map(Seat::label).sorted().toList(),
+                written.stream().sorted().toList(),
+                "the tickets must be exactly the seats that were picked");
+    }
+
+    @Test
     void secondHoldOnTheSameSeatIsRefusedAndRollsBack() throws Exception {
-        Showtime show = new ShowtimeDao(DB).upcoming(1).get(0);
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
         Seat seat = freeSeats(show, 1).get(0);
         StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
         BookingService service = new BookingService(DB);
@@ -155,8 +213,29 @@ class BookingServiceTest {
     }
 
     @Test
+    void holdOnAStartedScreeningIsRefusedAndWritesNothing() throws Exception {
+        // The guard reads the clock, so the screening is copied into the past rather
+        // than waiting for one to start: the same film, screen, price and seats, only
+        // an hour that has been and gone. A seat map left open past the hour must not
+        // be able to write a booking the auditorium can no longer honour.
+        Showtime sellable = new ShowtimeDao(DB).sellable(1).get(0);
+        Showtime started = new Showtime(sellable.showtimeId(), sellable.movie(),
+                sellable.screen(), sellable.showDate().minusDays(1),
+                sellable.startTime(), sellable.basePrice(), sellable.seatsSold());
+        StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
+        int bookingsBefore = bookingsFor(sellable.showtimeId());
+
+        ValidationException refused = assertThrows(ValidationException.class,
+                () -> new BookingService(DB).hold(started, freeSeats(sellable, 2), operator));
+
+        assertTrue(refused.getMessage().contains("already started"), refused.getMessage());
+        assertEquals(bookingsBefore, bookingsFor(sellable.showtimeId()),
+                "a refused hold must write no booking and no tickets");
+    }
+
+    @Test
     void releasingAnUnpaidHoldFreesTheSeatsAndKeepsTheAuditTrail() throws Exception {
-        Showtime show = new ShowtimeDao(DB).upcoming(1).get(0);
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
         List<Seat> picked = freeSeats(show, 2);
         StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
         BookingService service = new BookingService(DB);
@@ -211,7 +290,7 @@ class BookingServiceTest {
 
     @Test
     void expirySweepLeavesTheClerkNullSoThePerformanceReportCannotBePolluted() throws Exception {
-        Showtime show = new ShowtimeDao(DB).upcoming(1).get(0);
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
         StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
         BookingService service = new BookingService(DB);
 
@@ -237,7 +316,7 @@ class BookingServiceTest {
 
     @Test
     void sweepExpiredHoldsReleasesSeatsAndCleansConcessions() throws Exception {
-        Showtime show = new ShowtimeDao(DB).upcoming(1).get(0);
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
         StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
         BookingService service = new BookingService(DB);
         CheckoutService checkout = new CheckoutService(DB);
@@ -288,7 +367,7 @@ class BookingServiceTest {
 
     @Test
     void sweepNeverTouchesAPaidBookingEvenPastTheCutoff() throws Exception {
-        Showtime show = new ShowtimeDao(DB).upcoming(1).get(0);
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
         StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
         BookingService service = new BookingService(DB);
         CheckoutService checkout = new CheckoutService(DB);
@@ -308,7 +387,7 @@ class BookingServiceTest {
 
     @Test
     void cancelConfirmedBookingCalculatesRefundAndReleasesSeats() throws Exception {
-        Showtime show = new ShowtimeDao(DB).upcoming(1).get(0);
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
         StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
         BookingService bookingService = new BookingService(DB);
         CheckoutService checkoutService = new CheckoutService(DB);
@@ -349,7 +428,7 @@ class BookingServiceTest {
 
     @Test
     void cancelConfirmedBookingRefusesPastScreening() throws Exception {
-        Showtime show = new ShowtimeDao(DB).upcoming(1).get(0);
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
         StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
         BookingService bookingService = new BookingService(DB);
         CheckoutService checkoutService = new CheckoutService(DB);
@@ -398,7 +477,7 @@ class BookingServiceTest {
 
     @Test
     void holdExpiryDaemonSweepsItsExpiredHoldAndStops() throws Exception {
-        Showtime show = new ShowtimeDao(DB).upcoming(1).get(0);
+        Showtime show = new ShowtimeDao(DB).sellable(1).get(0);
         StaffUser operator = new StaffDao(DB).findByUsername("operator").orElseThrow();
         BookingService service = new BookingService(DB);
 

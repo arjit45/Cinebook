@@ -7,7 +7,7 @@
 
 **14 numbered queries** · 13 return a result set · 1 is a manual drill.
 
-Every output below was captured from MySQL 8.0.46 on 2026-10-22 against the seeded database; `tools/querydoc.py`
+Every output below was captured from MySQL 8.0.46 on 2026-10-24 against the seeded database; `tools/querydoc.py`
 refuses to write if the SQL changes without a fresh capture. Rebuilding the seed on a
 later day moves every printed calendar date — counts, revenue, rankings and
 `days_dormant` are date-independent — so after a rebuild run `python tools/querydoc.py
@@ -70,27 +70,27 @@ LIMIT 15;
 
 *1 statement(s): SELECT.*
 
-**Output** — MySQL 8.0.46, captured 2026-10-22.
+**Output** — MySQL 8.0.46, captured 2026-10-24.
 
 ```text
 +-----------------+--------+------------+------------+------------+-----------------+
 | movie           | screen | show_date  | start_time | base_price | seats_available |
 +-----------------+--------+------------+------------+------------+-----------------+
-| Chai & Chaos    | Audi 1 | 2026-10-22 | 10:30:00   |     280.00 |              93 |
-| Neon Monsoon    | Audi 2 | 2026-10-22 | 13:15:00   |     320.00 |              93 |
-| The Last Ledger | Audi 3 | 2026-10-22 | 19:00:00   |     360.00 |              93 |
-| Paper Lanterns  | Audi 4 | 2026-10-22 | 21:30:00   |     400.00 |              93 |
-| Silent Karst    | Audi 1 | 2026-10-23 | 13:15:00   |     220.00 |              93 |
-| Chai & Chaos    | Audi 2 | 2026-10-23 | 16:20:00   |     260.00 |              94 |
-| Neon Monsoon    | Audi 3 | 2026-10-23 | 21:30:00   |     300.00 |              93 |
-| The Last Ledger | Audi 4 | 2026-10-23 | 21:30:00   |     340.00 |              93 |
-| Chai & Chaos    | Audi 3 | 2026-10-24 | 10:30:00   |     330.00 |              93 |
-| Neon Monsoon    | Audi 4 | 2026-10-24 | 13:15:00   |     370.00 |              93 |
-| Turbo Kite      | Audi 1 | 2026-10-24 | 16:20:00   |     250.00 |              93 |
-| Silent Karst    | Audi 2 | 2026-10-24 | 19:00:00   |     290.00 |              93 |
-| Silent Karst    | Audi 3 | 2026-10-25 | 13:15:00   |     360.00 |              94 |
-| Chai & Chaos    | Audi 4 | 2026-10-25 | 16:20:00   |     400.00 |              94 |
-| Paper Lanterns  | Audi 1 | 2026-10-25 | 19:00:00   |     280.00 |              95 |
+| Turbo Kite      | Audi 3 | 2026-10-24 | 13:15:00   |     300.00 |              93 |
+| Silent Karst    | Audi 4 | 2026-10-24 | 13:15:00   |     340.00 |              94 |
+| The Last Ledger | Audi 1 | 2026-10-24 | 19:00:00   |     220.00 |              93 |
+| Paper Lanterns  | Audi 2 | 2026-10-24 | 21:30:00   |     260.00 |              93 |
+| The Last Ledger | Audi 2 | 2026-10-25 | 10:30:00   |     290.00 |              94 |
+| Paper Lanterns  | Audi 3 | 2026-10-25 | 16:20:00   |     330.00 |              95 |
+| Blue Meridian   | Audi 1 | 2026-10-25 | 19:00:00   |     250.00 |              96 |
+| Turbo Kite      | Audi 4 | 2026-10-25 | 19:00:00   |     370.00 |              94 |
+| Neon Monsoon    | Audi 1 | 2026-10-25 | 21:30:00   |     250.00 |              94 |
+| Chai & Chaos    | Audi 1 | 2026-10-26 | 10:30:00   |     280.00 |              93 |
+| Neon Monsoon    | Audi 2 | 2026-10-26 | 13:15:00   |     320.00 |              93 |
+| The Last Ledger | Audi 3 | 2026-10-26 | 19:00:00   |     360.00 |              93 |
+| Paper Lanterns  | Audi 4 | 2026-10-26 | 21:30:00   |     400.00 |              93 |
+| Silent Karst    | Audi 1 | 2026-10-27 | 13:15:00   |     220.00 |              93 |
+| Chai & Chaos    | Audi 2 | 2026-10-27 | 16:20:00   |     260.00 |              95 |
 +-----------------+--------+------------+------------+------------+-----------------+
 ```
 
@@ -120,16 +120,16 @@ ORDER BY total_revenue DESC;
 
 *1 statement(s): SELECT.*
 
-**Output** — MySQL 8.0.46, captured 2026-10-22.
+**Output** — MySQL 8.0.46, captured 2026-10-24.
 
 ```text
 +--------+----------+--------------+----------------+-------------+---------------+
 | screen | bookings | tickets_sold | ticket_revenue | fnb_revenue | total_revenue |
 +--------+----------+--------------+----------------+-------------+---------------+
-| Audi 1 |       60 |           60 |       14940.00 |    26680.00 |      41620.00 |
-| Audi 4 |       61 |           61 |       22480.00 |        0.00 |      22480.00 |
-| Audi 3 |       62 |           62 |       20400.00 |        0.00 |      20400.00 |
-| Audi 2 |       61 |           61 |       17690.00 |        0.00 |      17690.00 |
+| Audi 1 |       60 |           60 |       17992.00 |    26680.00 |      44672.00 |
+| Audi 4 |       61 |           61 |       28005.00 |        0.00 |      28005.00 |
+| Audi 3 |       62 |           62 |       24549.00 |        0.00 |      24549.00 |
+| Audi 2 |       61 |           61 |       20931.00 |        0.00 |      20931.00 |
 +--------+----------+--------------+----------------+-------------+---------------+
 ```
 
@@ -165,32 +165,32 @@ LIMIT 20;
 
 *1 statement(s): SELECT.*
 
-**Output** — MySQL 8.0.46, captured 2026-10-22.
+**Output** — MySQL 8.0.46, captured 2026-10-24.
 
 ```text
 +------------+----------------+-----------------+------------+------------+--------+-----------+---------+------------+--------+----------------+
 | booking_id | customer       | movie           | show_date  | start_time | screen | row_label | seat_no | seat_class | price  | sold_by        |
 +------------+----------------+-----------------+------------+------------+--------+-----------+---------+------------+--------+----------------+
-|        300 | Tara Seshadri  | Turbo Kite      | 2026-10-24 | 16:20:00   | Audi 1 | A         |       3 | REGULAR    | 250.00 | Leena Mathew   |
-|        299 | Vihaan Joshi   | Silent Karst    | 2026-10-24 | 19:00:00   | Audi 2 | A         |       3 | REGULAR    | 290.00 | Meera Krishnan |
-|        298 | Ritika Bose    | Chai & Chaos    | 2026-10-24 | 10:30:00   | Audi 3 | A         |       3 | REGULAR    | 330.00 | Leena Mathew   |
-|        297 | Reyansh Kapoor | Neon Monsoon    | 2026-10-24 | 13:15:00   | Audi 4 | A         |       3 | REGULAR    | 370.00 | Meera Krishnan |
-|        296 | Ananya Gupta   | Silent Karst    | 2026-10-23 | 13:15:00   | Audi 1 | A         |       3 | REGULAR    | 220.00 | Leena Mathew   |
-|        294 | Nisha Bhat     | Neon Monsoon    | 2026-10-23 | 21:30:00   | Audi 3 | A         |       3 | REGULAR    | 300.00 | Leena Mathew   |
-|        293 | Kabir Nair     | The Last Ledger | 2026-10-23 | 21:30:00   | Audi 4 | A         |       3 | REGULAR    | 340.00 | Meera Krishnan |
-|        292 | Priya Ranjan   | Chai & Chaos    | 2026-10-22 | 10:30:00   | Audi 1 | A         |       3 | REGULAR    | 280.00 | Leena Mathew   |
-|        291 | Aditya Verma   | Neon Monsoon    | 2026-10-22 | 13:15:00   | Audi 2 | A         |       3 | REGULAR    | 320.00 | Meera Krishnan |
-|        290 | Ishita Rao     | The Last Ledger | 2026-10-22 | 19:00:00   | Audi 3 | A         |       3 | REGULAR    | 360.00 | Leena Mathew   |
-|        289 | Nikhil Chandra | Paper Lanterns  | 2026-10-22 | 21:30:00   | Audi 4 | A         |       3 | REGULAR    | 400.00 | Meera Krishnan |
-|        287 | Rohan Iyer     | The Last Ledger | 2026-10-21 | 10:30:00   | Audi 2 | A         |       3 | REGULAR    | 290.00 | Meera Krishnan |
-|        285 | Arjun Deshmukh | Turbo Kite      | 2026-10-21 | 19:00:00   | Audi 4 | A         |       3 | REGULAR    | 370.00 | Meera Krishnan |
-|        284 | Diya Menon     | The Last Ledger | 2026-10-20 | 19:00:00   | Audi 1 | A         |       3 | REGULAR    | 220.00 | Leena Mathew   |
-|        283 | Dev Malhotra   | Paper Lanterns  | 2026-10-20 | 21:30:00   | Audi 2 | A         |       3 | REGULAR    | 260.00 | Meera Krishnan |
-|        282 | Meera Pillai   | Turbo Kite      | 2026-10-20 | 13:15:00   | Audi 3 | A         |       3 | REGULAR    | 300.00 | Leena Mathew   |
-|        280 | Tara Seshadri  | Paper Lanterns  | 2026-10-19 | 16:20:00   | Audi 1 | A         |       3 | REGULAR    | 280.00 | Leena Mathew   |
-|        279 | Vihaan Joshi   | Turbo Kite      | 2026-10-19 | 19:00:00   | Audi 2 | A         |       3 | REGULAR    | 320.00 | Meera Krishnan |
-|        278 | Ritika Bose    | Silent Karst    | 2026-10-19 | 10:30:00   | Audi 3 | A         |       3 | REGULAR    | 360.00 | Leena Mathew   |
-|        277 | Reyansh Kapoor | Chai & Chaos    | 2026-10-19 | 13:15:00   | Audi 4 | A         |       3 | REGULAR    | 400.00 | Meera Krishnan |
+|        300 | Tara Seshadri  | Turbo Kite      | 2026-10-28 | 16:20:00   | Audi 1 | D         |       8 | REGULAR    | 250.00 | Leena Mathew   |
+|        299 | Vihaan Joshi   | Silent Karst    | 2026-10-28 | 19:00:00   | Audi 2 | C         |       3 | REGULAR    | 290.00 | Meera Krishnan |
+|        298 | Ritika Bose    | Chai & Chaos    | 2026-10-28 | 10:30:00   | Audi 3 | A         |      10 | REGULAR    | 330.00 | Leena Mathew   |
+|        297 | Reyansh Kapoor | Neon Monsoon    | 2026-10-28 | 13:15:00   | Audi 4 | H         |       5 | RECLINER   | 592.00 | Meera Krishnan |
+|        296 | Ananya Gupta   | Silent Karst    | 2026-10-27 | 13:15:00   | Audi 1 | F         |      12 | PREMIUM    | 275.00 | Leena Mathew   |
+|        294 | Nisha Bhat     | Neon Monsoon    | 2026-10-27 | 21:30:00   | Audi 3 | D         |       2 | REGULAR    | 300.00 | Leena Mathew   |
+|        293 | Kabir Nair     | The Last Ledger | 2026-10-27 | 21:30:00   | Audi 4 | B         |       9 | REGULAR    | 340.00 | Meera Krishnan |
+|        292 | Priya Ranjan   | Chai & Chaos    | 2026-10-26 | 10:30:00   | Audi 1 | A         |       4 | REGULAR    | 280.00 | Leena Mathew   |
+|        291 | Aditya Verma   | Neon Monsoon    | 2026-10-26 | 13:15:00   | Audi 2 | G         |      11 | RECLINER   | 512.00 | Meera Krishnan |
+|        290 | Ishita Rao     | The Last Ledger | 2026-10-26 | 19:00:00   | Audi 3 | F         |       6 | PREMIUM    | 450.00 | Leena Mathew   |
+|        289 | Nikhil Chandra | Paper Lanterns  | 2026-10-26 | 21:30:00   | Audi 4 | E         |       1 | PREMIUM    | 500.00 | Meera Krishnan |
+|        287 | Rohan Iyer     | The Last Ledger | 2026-10-25 | 10:30:00   | Audi 2 | B         |       3 | REGULAR    | 290.00 | Meera Krishnan |
+|        285 | Arjun Deshmukh | Turbo Kite      | 2026-10-25 | 19:00:00   | Audi 4 | G         |       5 | RECLINER   | 592.00 | Meera Krishnan |
+|        284 | Diya Menon     | The Last Ledger | 2026-10-24 | 19:00:00   | Audi 1 | E         |      12 | PREMIUM    | 275.00 | Leena Mathew   |
+|        283 | Dev Malhotra   | Paper Lanterns  | 2026-10-24 | 21:30:00   | Audi 2 | D         |       7 | REGULAR    | 260.00 | Meera Krishnan |
+|        282 | Meera Pillai   | Turbo Kite      | 2026-10-24 | 13:15:00   | Audi 3 | C         |       2 | REGULAR    | 300.00 | Leena Mathew   |
+|        280 | Tara Seshadri  | Paper Lanterns  | 2026-10-23 | 16:20:00   | Audi 1 | H         |       4 | RECLINER   | 448.00 | Leena Mathew   |
+|        279 | Vihaan Joshi   | Turbo Kite      | 2026-10-23 | 19:00:00   | Audi 2 | F         |      11 | PREMIUM    | 400.00 | Meera Krishnan |
+|        278 | Ritika Bose    | Silent Karst    | 2026-10-23 | 10:30:00   | Audi 3 | E         |       6 | PREMIUM    | 450.00 | Leena Mathew   |
+|        277 | Reyansh Kapoor | Chai & Chaos    | 2026-10-23 | 13:15:00   | Audi 4 | D         |       1 | REGULAR    | 400.00 | Meera Krishnan |
 +------------+----------------+-----------------+------------+------------+--------+-----------+---------+------------+--------+----------------+
 ```
 
@@ -215,15 +215,14 @@ ORDER BY last_screened_on;
 
 *1 statement(s): SELECT.*
 
-**Output** — MySQL 8.0.46, captured 2026-10-22.
+**Output** — MySQL 8.0.46, captured 2026-10-24.
 
 ```text
-+----------+---------------+-----------+------------------+--------------+
-| movie_id | title         | genre     | last_screened_on | days_dormant |
-+----------+---------------+-----------+------------------+--------------+
-|        8 | Static Bloom  | Romance   | 2026-03-30       |          206 |
-|        7 | Blue Meridian | Adventure | 2026-04-03       |          202 |
-+----------+---------------+-----------+------------------+--------------+
++----------+--------------+---------+------------------+--------------+
+| movie_id | title        | genre   | last_screened_on | days_dormant |
++----------+--------------+---------+------------------+--------------+
+|        8 | Static Bloom | Romance | 2026-04-03       |          204 |
++----------+--------------+---------+------------------+--------------+
 ```
 
 
@@ -251,15 +250,15 @@ LIMIT 3;
 
 *1 statement(s): SELECT.*
 
-**Output** — MySQL 8.0.46, captured 2026-10-22.
+**Output** — MySQL 8.0.46, captured 2026-10-24.
 
 ```text
 +-----------------+----------+--------------+----------+
 | title           | bookings | tickets_sold | revenue  |
 +-----------------+----------+--------------+----------+
-| Neon Monsoon    |       42 |           42 | 18510.00 |
-| The Last Ledger |       43 |           43 | 18040.00 |
-| Chai & Chaos    |       38 |           38 | 17040.00 |
+| Neon Monsoon    |       42 |           42 | 21332.00 |
+| The Last Ledger |       43 |           43 | 20645.50 |
+| Silent Karst    |       41 |           41 | 19633.50 |
 +-----------------+----------+--------------+----------+
 ```
 
@@ -282,32 +281,32 @@ ORDER BY total_spent DESC;
 
 *1 statement(s): SELECT.*
 
-**Output** — MySQL 8.0.46, captured 2026-10-22.
+**Output** — MySQL 8.0.46, captured 2026-10-24.
 
 ```text
 +-----------------+----------+-------------+
 | full_name       | bookings | total_spent |
 +-----------------+----------+-------------+
-| Diya Menon      |       13 |     9360.00 |
-| Priya Ranjan    |       12 |     8320.00 |
-| Ananya Gupta    |       12 |     8250.00 |
-| Tara Seshadri   |       12 |     7990.00 |
-| Saanvi Kulkarni |       11 |     7700.00 |
-| Arjun Deshmukh  |       13 |     4810.00 |
-| Aarav Sharma    |       12 |     4470.00 |
-| Kabir Nair      |       12 |     4410.00 |
-| Nikhil Chandra  |       12 |     4410.00 |
-| Reyansh Kapoor  |       12 |     4380.00 |
-| Nisha Bhat      |       13 |     4290.00 |
-| Meera Pillai    |       13 |     4170.00 |
-| Ishita Rao      |       12 |     4050.00 |
-| Zara Qureshi    |       12 |     3990.00 |
-| Ritika Bose     |       12 |     3900.00 |
-| Dev Malhotra    |       13 |     3710.00 |
-| Rohan Iyer      |       13 |     3680.00 |
-| Vihaan Joshi    |       12 |     3540.00 |
-| Aditya Verma    |       12 |     3510.00 |
-| Yash Thakur     |       11 |     3250.00 |
+| Diya Menon      |       13 |    10119.00 |
+| Ananya Gupta    |       12 |     8869.50 |
+| Priya Ranjan    |       12 |     8782.00 |
+| Tara Seshadri   |       12 |     8601.00 |
+| Saanvi Kulkarni |       11 |     8300.50 |
+| Arjun Deshmukh  |       13 |     5924.50 |
+| Kabir Nair      |       12 |     5689.00 |
+| Reyansh Kapoor  |       12 |     5520.00 |
+| Nikhil Chandra  |       12 |     5450.50 |
+| Aarav Sharma    |       12 |     5421.00 |
+| Meera Pillai    |       13 |     5172.00 |
+| Nisha Bhat      |       13 |     5095.50 |
+| Ishita Rao      |       12 |     4935.00 |
+| Zara Qureshi    |       12 |     4803.00 |
+| Ritika Bose     |       12 |     4543.50 |
+| Dev Malhotra    |       13 |     4398.50 |
+| Vihaan Joshi    |       12 |     4330.50 |
+| Aditya Verma    |       12 |     4260.00 |
+| Rohan Iyer      |       13 |     4217.00 |
+| Yash Thakur     |       11 |     3725.00 |
 +-----------------+----------+-------------+
 ```
 
@@ -330,15 +329,14 @@ ORDER BY m.title;
 
 *1 statement(s): SELECT.*
 
-**Output** — MySQL 8.0.46, captured 2026-10-22.
+**Output** — MySQL 8.0.46, captured 2026-10-24.
 
 ```text
-+----------+---------------+
-| movie_id | title         |
-+----------+---------------+
-|        7 | Blue Meridian |
-|        8 | Static Bloom  |
-+----------+---------------+
++----------+--------------+
+| movie_id | title        |
++----------+--------------+
+|        8 | Static Bloom |
++----------+--------------+
 ```
 
 
@@ -369,7 +367,7 @@ WHERE b.status = 'CONFIRMED'
 
 *1 statement(s): SELECT.*
 
-**Output** — MySQL 8.0.46, captured 2026-10-22.
+**Output** — MySQL 8.0.46, captured 2026-10-24.
 
 ```text
 (no rows)
@@ -391,18 +389,18 @@ ORDER BY revenue_rank;
 
 *1 statement(s): SELECT.*
 
-**Output** — MySQL 8.0.46, captured 2026-10-22.
+**Output** — MySQL 8.0.46, captured 2026-10-24.
 
 ```text
 +-----------------+-----------+----------+--------------+--------------+
 | title           | genre     | revenue  | revenue_rank | pct_of_total |
 +-----------------+-----------+----------+--------------+--------------+
-| Paper Lanterns  | Drama     | 15200.00 |            1 |        17.33 |
-| The Last Ledger | Thriller  | 15180.00 |            2 |        17.31 |
-| Neon Monsoon    | Sci-Fi    | 14740.00 |            3 |        16.81 |
-| Turbo Kite      | Animation | 14730.00 |            4 |        16.79 |
-| Silent Karst    | Horror    | 13940.00 |            5 |        15.89 |
-| Chai & Chaos    | Comedy    | 13920.00 |            6 |        15.87 |
+| Neon Monsoon    | Sci-Fi    | 15722.00 |            1 |        17.19 |
+| Paper Lanterns  | Drama     | 15677.50 |            2 |        17.14 |
+| Silent Karst    | Horror    | 15473.50 |            3 |        16.92 |
+| The Last Ledger | Thriller  | 15365.50 |            4 |        16.80 |
+| Turbo Kite      | Animation | 14781.00 |            5 |        16.16 |
+| Chai & Chaos    | Comedy    | 14457.50 |            6 |        15.80 |
 +-----------------+-----------+----------+--------------+--------------+
 ```
 
@@ -421,22 +419,22 @@ LIMIT 10;
 
 *1 statement(s): SELECT.*
 
-**Output** — MySQL 8.0.46, captured 2026-10-22.
+**Output** — MySQL 8.0.46, captured 2026-10-24.
 
 ```text
 +-----------------+--------+------------+------------+------------+-----------------+---------------+
 | movie           | screen | show_date  | start_time | seats_sold | seats_available | occupancy_pct |
 +-----------------+--------+------------+------------+------------+-----------------+---------------+
-| Chai & Chaos    | Audi 1 | 2026-10-22 | 10:30:00   |          3 |              93 |           3.1 |
-| Silent Karst    | Audi 1 | 2026-10-23 | 13:15:00   |          3 |              93 |           3.1 |
-| Turbo Kite      | Audi 1 | 2026-10-24 | 16:20:00   |          3 |              93 |           3.1 |
-| Neon Monsoon    | Audi 2 | 2026-10-22 | 13:15:00   |          3 |              93 |           3.1 |
-| Silent Karst    | Audi 2 | 2026-10-24 | 19:00:00   |          3 |              93 |           3.1 |
-| The Last Ledger | Audi 3 | 2026-10-22 | 19:00:00   |          3 |              93 |           3.1 |
-| Neon Monsoon    | Audi 3 | 2026-10-23 | 21:30:00   |          3 |              93 |           3.1 |
-| Chai & Chaos    | Audi 3 | 2026-10-24 | 10:30:00   |          3 |              93 |           3.1 |
-| Paper Lanterns  | Audi 4 | 2026-10-22 | 21:30:00   |          3 |              93 |           3.1 |
-| The Last Ledger | Audi 4 | 2026-10-23 | 21:30:00   |          3 |              93 |           3.1 |
+| The Last Ledger | Audi 1 | 2026-10-24 | 19:00:00   |          3 |              93 |           3.1 |
+| Neon Monsoon    | Audi 4 | 2026-10-28 | 13:15:00   |          3 |              93 |           3.1 |
+| Neon Monsoon    | Audi 2 | 2026-10-26 | 13:15:00   |          3 |              93 |           3.1 |
+| Chai & Chaos    | Audi 1 | 2026-10-26 | 10:30:00   |          3 |              93 |           3.1 |
+| Silent Karst    | Audi 1 | 2026-10-27 | 13:15:00   |          3 |              93 |           3.1 |
+| The Last Ledger | Audi 3 | 2026-10-26 | 19:00:00   |          3 |              93 |           3.1 |
+| Paper Lanterns  | Audi 4 | 2026-10-26 | 21:30:00   |          3 |              93 |           3.1 |
+| Chai & Chaos    | Audi 3 | 2026-10-28 | 10:30:00   |          3 |              93 |           3.1 |
+| Silent Karst    | Audi 2 | 2026-10-28 | 19:00:00   |          3 |              93 |           3.1 |
+| Paper Lanterns  | Audi 2 | 2026-10-24 | 21:30:00   |          3 |              93 |           3.1 |
 +-----------------+--------+------------+------------+------------+-----------------+---------------+
 ```
 
@@ -455,27 +453,27 @@ LIMIT 15;
 
 *1 statement(s): SELECT.*
 
-**Output** — MySQL 8.0.46, captured 2026-10-22.
+**Output** — MySQL 8.0.46, captured 2026-10-24.
 
 ```text
 +--------+-----------+---------+------------+
 | screen | row_label | seat_no | seat_class |
 +--------+-----------+---------+------------+
-| Audi 1 | A         |       4 | REGULAR    |
+| Audi 1 | A         |       1 | REGULAR    |
 | Audi 1 | A         |       5 | REGULAR    |
-| Audi 1 | A         |       6 | REGULAR    |
-| Audi 1 | A         |       7 | REGULAR    |
-| Audi 1 | A         |       8 | REGULAR    |
 | Audi 1 | A         |       9 | REGULAR    |
-| Audi 1 | A         |      10 | REGULAR    |
-| Audi 1 | A         |      11 | REGULAR    |
-| Audi 1 | A         |      12 | REGULAR    |
 | Audi 1 | B         |       1 | REGULAR    |
-| Audi 1 | B         |       2 | REGULAR    |
-| Audi 1 | B         |       3 | REGULAR    |
 | Audi 1 | B         |       4 | REGULAR    |
 | Audi 1 | B         |       5 | REGULAR    |
-| Audi 1 | B         |       6 | REGULAR    |
+| Audi 1 | B         |       9 | REGULAR    |
+| Audi 1 | B         |      12 | REGULAR    |
+| Audi 1 | C         |       1 | REGULAR    |
+| Audi 1 | C         |       5 | REGULAR    |
+| Audi 1 | C         |       8 | REGULAR    |
+| Audi 1 | C         |       9 | REGULAR    |
+| Audi 1 | C         |      12 | REGULAR    |
+| Audi 1 | D         |       1 | REGULAR    |
+| Audi 1 | D         |       2 | REGULAR    |
 +--------+-----------+---------+------------+
 ```
 
@@ -508,18 +506,18 @@ ORDER BY ticket_revenue DESC;
 
 *1 statement(s): SELECT.*
 
-**Output** — MySQL 8.0.46, captured 2026-10-22.
+**Output** — MySQL 8.0.46, captured 2026-10-24.
 
 ```text
 +-----------------+----------------+-------------+--------------------+
 | title           | ticket_revenue | fnb_revenue | fnb_pct_of_tickets |
 +-----------------+----------------+-------------+--------------------+
-| Neon Monsoon    |       12900.00 |     5610.00 |               43.5 |
-| The Last Ledger |       12760.00 |     5280.00 |               41.4 |
-| Paper Lanterns  |       12730.00 |     3440.00 |               27.0 |
-| Turbo Kite      |       12620.00 |     3140.00 |               24.9 |
-| Silent Karst    |       12510.00 |     4160.00 |               33.3 |
-| Chai & Chaos    |       11990.00 |     5050.00 |               42.1 |
+| Neon Monsoon    |       15722.00 |     5610.00 |               35.7 |
+| Paper Lanterns  |       15677.50 |     3440.00 |               21.9 |
+| Silent Karst    |       15473.50 |     4160.00 |               26.9 |
+| The Last Ledger |       15365.50 |     5280.00 |               34.4 |
+| Turbo Kite      |       14781.00 |     3140.00 |               21.2 |
+| Chai & Chaos    |       14457.50 |     5050.00 |               34.9 |
 +-----------------+----------------+-------------+--------------------+
 ```
 
@@ -555,9 +553,16 @@ WHERE cancelled_by_staff_id = @staff_id
 
 *3 statement(s): SELECT, SET.*
 
-**Output** — MySQL 8.0.46, captured 2026-10-22.
+**Output** — MySQL 8.0.46, captured 2026-10-24.
 
 ```text
++--------+----------+--------------+-----------+--------+
+| method | bookings | ticket_taken | fnb_taken | gross  |
++--------+----------+--------------+-----------+--------+
+| CARD   |        1 |       544.00 |      0.00 | 544.00 |
+| UPI    |        2 |       690.00 |      0.00 | 690.00 |
+| CASH   |        1 |       400.00 |      0.00 | 400.00 |
++--------+----------+--------------+-----------+--------+
 +---------+----------+
 | refunds | refunded |
 +---------+----------+

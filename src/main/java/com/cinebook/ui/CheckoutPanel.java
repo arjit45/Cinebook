@@ -44,6 +44,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * The checkout side panel from docs/PRD.md §5: the chosen seats and class totals,
@@ -80,6 +81,7 @@ public final class CheckoutPanel {
     private final StaffUser clerk;
     private final Runnable onDone;
     private final Runnable onReleased;
+    private final Consumer<Receipt> onPaid;
 
     private final VBox content = new VBox(16);
     private final VBox form = new VBox(16);
@@ -114,7 +116,7 @@ public final class CheckoutPanel {
 
     public CheckoutPanel(CheckoutService service, int bookingId, Showtime showtime,
                          List<Seat> seats, StaffUser clerk, Runnable onDone,
-                         Runnable onReleased) {
+                         Runnable onReleased, Consumer<Receipt> onPaid) {
         this.service = service;
         this.bookingId = bookingId;
         this.showtime = showtime;
@@ -122,6 +124,7 @@ public final class CheckoutPanel {
         this.clerk = clerk;
         this.onDone = onDone;
         this.onReleased = onReleased;
+        this.onPaid = onPaid == null ? receipt -> { } : onPaid;
 
         countdownChip.setStyle("-fx-background-color: rgba(229,165,10,0.15); -fx-text-fill: #e5a50a; -fx-padding: 2px 8px; -fx-background-radius: 4px; -fx-font-size: 11px; -fx-font-weight: bold;");
         countdownTimeline = new javafx.animation.Timeline(
@@ -660,10 +663,11 @@ public final class CheckoutPanel {
         heldSeats.setText("SOLD SEATS: " + labels());
         releaseLine.setVisible(false);
         releaseLine.setManaged(false);
-        // And the footer is the payment action: leaving it on screen would offer a
-        // second charge on a booking the procedure has already closed.
-        footer.setVisible(false);
-        footer.setManaged(false);
+        // Hide the payment action, but keep the footer's status line: printing the
+        // receipt reports the file it wrote there, and a note under a hidden parent
+        // is a note the clerk never sees.
+        footerActions.setVisible(false);
+        footerActions.setManaged(false);
 
         Label paid = new Label("PAID");
         paid.getStyleClass().add("checkout-eyebrow");
@@ -699,6 +703,7 @@ public final class CheckoutPanel {
         stub.getStyleClass().add("receipt-stub");
         content.getChildren().add(stub);
         slideIn(stub);
+        onPaid.accept(receipt);
 
         // The form is gone, so the rail is shorter than it was; read the slip from
         // its top rather than wherever the scroll happened to be parked.

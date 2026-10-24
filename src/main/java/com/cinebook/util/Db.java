@@ -139,7 +139,7 @@ public final class Db {
         }
     }
 
-    /** Takes an idle connection, filling the pool if it is empty. */
+    /** Takes an idle connection, opening only missing pool slots if none is queued. */
     private Connection acquire() {
         Connection connection = pool.poll();
         if (connection != null) {
@@ -150,23 +150,22 @@ public final class Db {
     }
 
     /**
-     * Opens connections up to {@link #POOL_SIZE} on first use, so a stopped MySQL
-     * surfaces as a message on the sign-in screen rather than a window that never
-     * appears (docs/PRD.md §11.4). Synchronized only on the cold path — once the
-     * pool is full this never runs again.
+     * Opens the missing connections on first use, so a stopped MySQL surfaces as a
+     * message on the sign-in screen rather than a window that never appears
+     * (docs/PRD.md §11.4).
+     *
+     * <p>The queue being empty is not proof that connections need opening: it is
+     * also what saturation looks like when all three are borrowed. The count of
+     * open connections, not the queue length, decides. With all three out, this
+     * opens nothing and {@link #await()} supplies the backpressure instead of a
+     * fourth connection.</p>
      */
     private synchronized void fill() {
-        if (pool.size() >= POOL_SIZE) {
+        int missing = POOL_SIZE - openCount.get();
+        if (missing <= 0) {
             return;
         }
-        // Anything already queued failed validation and was discarded; start clean
-        // so a persistent failure is reported once rather than compounded.
-        Connection stale;
-        while ((stale = pool.poll()) != null) {
-            closeQuietly(stale);
-            openCount.decrementAndGet();
-        }
-        for (int i = pool.size(); i < POOL_SIZE; i++) {
+        for (int i = 0; i < missing; i++) {
             try {
                 pool.put(DriverManager.getConnection(url, user, password));
                 openCount.incrementAndGet();
@@ -203,7 +202,7 @@ public final class Db {
      * Disposes a connection that failed validation and opens a fresh one in its
      * place, so the pool keeps its full size across a MySQL restart or a timeout.
      */
-    private Connection replace(Connection dead) {
+    private synchronized Connection replace(Connection dead) {
         closeQuietly(dead);
         openCount.decrementAndGet();
         try {

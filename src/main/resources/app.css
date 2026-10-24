@@ -268,6 +268,28 @@
 }
 
 /*
+  A screening that has already started keeps its place on the day's slate, muted
+  and closed, so the clerk can see the time and why it is no longer openable
+  instead of the row vanishing mid-day. The disabled rule wins over the global
+  .button:disabled so the text stays readable on the ivory stock.
+*/
+.button.schedule-row-started:disabled {
+    -fx-opacity: 1;
+    -fx-cursor: default;
+    -fx-border-color: transparent transparent #E4E1D6 transparent;
+}
+
+.button.schedule-row-started .label {
+    -fx-text-fill: #A9A69B;
+}
+
+.started-flag {
+    -fx-text-fill: #C0503C;
+    -fx-font-weight: 600;
+    -fx-font-size: 12px;
+}
+
+/*
   The seat page (docs/PRD.md §4): warm ivory stock, no panel and no box. One
   turquoise screen, then a band per class. Cream seats on a tan hairline; state
   is the only strong colour — faded with an × for sold, green for a pick.
@@ -430,6 +452,11 @@
     -fx-font-size: 12px;
     -fx-min-height: 18;
     -fx-alignment: CENTER;
+}
+
+.seat-status.house-full {
+    -fx-text-fill: #16181C;
+    -fx-font-weight: 600;
 }
 
 /* The booking footer from the reference: picks, their class and the bill in one

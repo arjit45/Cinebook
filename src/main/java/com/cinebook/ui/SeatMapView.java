@@ -4,6 +4,7 @@ import com.cinebook.dao.SeatDao;
 import com.cinebook.exception.BookingException;
 import com.cinebook.exception.DbUnavailableException;
 import com.cinebook.exception.SeatUnavailableException;
+import com.cinebook.model.Receipt;
 import com.cinebook.model.Seat;
 import com.cinebook.model.Showtime;
 import com.cinebook.model.StaffUser;
@@ -99,7 +100,7 @@ public final class SeatMapView {
     private final Runnable onDone;
     private final VBox root = new VBox();
     private final HBox stage = new HBox();
-    private final VBox paper = new VBox(26);
+    private final VBox paper = new VBox(18);
     private final Label status = new Label("Pick seats to see their class and their price.");
     private final Set<Seat> pickedSeats = new LinkedHashSet<>();
     private final Map<Seat, Button> seatButtons = new LinkedHashMap<>();
@@ -120,8 +121,11 @@ public final class SeatMapView {
 
         paper.getStyleClass().add("seat-paper");
         paper.setAlignment(Pos.TOP_CENTER);
-        paper.setPadding(new Insets(34, 32, 34, 32));
-        paper.setMinWidth(PAGE_W);
+        paper.setPadding(new Insets(28, 32, 24, 32));
+        // Pref is the documented 730 px sheet; the minimum leaves room for the
+        // vertical scrollbar at the 1280 x 720 minimum window, where 730 + the 330 px
+        // checkout rail + a 15 px bar would otherwise force a horizontal scrollbar.
+        paper.setMinWidth(PAGE_W - 16);
         paper.setPrefWidth(PAGE_W);
         paper.setMaxWidth(PAGE_W);
 
@@ -134,6 +138,10 @@ public final class SeatMapView {
         scroll.setFitToHeight(true);
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        // Without this a ScrollPane's computed maximum is its preferred width, so
+        // the stage grew only as wide as the paper and left a dead column on the
+        // right at 1280 px.
+        scroll.setMaxWidth(Double.MAX_VALUE);
         scroll.getStyleClass().add("seat-scroll");
 
         stage.getChildren().add(scroll);
@@ -164,7 +172,7 @@ public final class SeatMapView {
         heldBookingId = null;
         confirmSeats.setText("Confirm Seats");
         status.setText("Pick seats to see their class and their price.");
-        status.getStyleClass().remove("error");
+        status.getStyleClass().removeAll("error", "house-full");
         paper.getChildren().clear();
 
         try {
@@ -172,9 +180,14 @@ public final class SeatMapView {
             List<Seat> room = seats.byScreen(showtime.screen().screenId());
             Set<String> sold = seats.soldLabels(showtime.showtimeId());
             if (room.isEmpty()) {
-                paper.getChildren().add(note("This auditorium has no seats on record."));
+                status.setText("This auditorium has no seats on record.");
+                paper.getChildren().add(status);
             } else {
                 paper.getChildren().addAll(screenGraphic(), sections(room, sold), status);
+                if (isFullHouse(room, sold)) {
+                    status.setText("House full. Pick another screening.");
+                    status.getStyleClass().add("house-full");
+                }
             }
         } catch (DbUnavailableException unavailable) {
             paper.getChildren().add(note("MySQL is not running — start the service, then reopen this screening."));
@@ -182,6 +195,11 @@ public final class SeatMapView {
             paper.getChildren().add(note("The seat map could not be read: " + failure.getMessage()));
         }
         updateBar();
+    }
+
+    /** Every physical seat in the room has a ticket for this screening. */
+    private static boolean isFullHouse(List<Seat> room, Set<String> sold) {
+        return room.stream().allMatch(seat -> sold.contains(seat.label()));
     }
 
     private VBox header(Runnable onBack) {
@@ -199,7 +217,9 @@ public final class SeatMapView {
         meta.getStyleClass().add("muted");
 
         VBox heading = new VBox(6, back, title, meta);
-        heading.setPadding(new Insets(34, 40, 18, 40));
+        // Compact at 720 px: the status line under the seating must still be above
+        // the booking bar when the window is at its documented minimum height.
+        heading.setPadding(new Insets(26, 40, 14, 40));
         heading.getStyleClass().add("row-rule");
         return heading;
     }
@@ -247,7 +267,7 @@ public final class SeatMapView {
             seatArea = Math.max(seatArea, rowWidth(group.getKey(), columns));
         }
 
-        VBox stack = new VBox(26);
+        VBox stack = new VBox(22);
         stack.setAlignment(Pos.TOP_CENTER);
         for (SeatClass seatClass : SeatClass.values()) {
             List<Seat> group = byClass.get(seatClass);
@@ -503,12 +523,22 @@ public final class SeatMapView {
     /** Runs on the FX thread once the hold has committed. */
     private void heldSeats(BookingService.Held held, List<Seat> chosen) {
         heldBookingId = held.bookingId();
-        for (Seat seat : chosen) {
-            Button button = seatButtons.get(seat);
-            if (button != null) {
+        // The hold owns exactly the snapshot the transaction received. Freeze every
+        // other seat until release: picking one now would turn the bar green and add
+        // money to a bill that has no way to put that seat on the hold.
+        pickedSeats.retainAll(chosen);
+        for (Map.Entry<Seat, Button> entry : seatButtons.entrySet()) {
+            Seat seat = entry.getKey();
+            Button button = entry.getValue();
+            if (chosen.contains(seat)) {
                 button.getStyleClass().remove("seat-picked");
                 button.getStyleClass().add("seat-held");
                 button.setOnAction(null);
+            } else {
+                button.getStyleClass().remove("seat-picked");
+                if (!button.getStyleClass().contains("seat-sold")) {
+                    button.setDisable(true);
+                }
             }
         }
         confirmSeats.setText("Held #" + held.bookingId());
@@ -518,8 +548,17 @@ public final class SeatMapView {
                 + "  \u00b7  checkout is open on the right");
         stage.getChildren().add(new CheckoutPanel(
                 new CheckoutService(db), held.bookingId(), showtime, chosen, soldBy, onDone,
-                this::holdReleased).root());
+                this::holdReleased, this::paidSeats).root());
         updateBar();
+    }
+
+    /** The checkout confirmed the sale; the map's own line must stop calling it a hold. */
+    private void paidSeats(Receipt receipt) {
+        status.getStyleClass().removeAll("error", "house-full");
+        status.setText("Sold  \u00b7  " + receipt.reference()
+                + "  \u00b7  \u20b9" + money(receipt.totalAmount())
+                + "  \u00b7  receipt ready");
+        confirmSeats.setText("Sold #" + receipt.bookingId());
     }
 
     /**
@@ -543,6 +582,7 @@ public final class SeatMapView {
         if (failure instanceof SeatUnavailableException taken) {
             render();
             status.setText(taken.getMessage());
+            status.getStyleClass().remove("house-full");
             status.getStyleClass().add("error");
         } else if (failure instanceof BookingException || failure instanceof SQLException) {
             status.setText(failure.getMessage());
@@ -564,7 +604,7 @@ public final class SeatMapView {
      * the bill. Nothing reaches the database until Confirm runs {@link #holdSeats()}.
      */
     private void pick(Seat seat, boolean isSold, Button button) {
-        status.getStyleClass().remove("error");
+        status.getStyleClass().removeAll("error", "house-full");
         if (isSold) {
             status.setText(seat.label() + " is already sold for this screening.");
             status.getStyleClass().add("error");

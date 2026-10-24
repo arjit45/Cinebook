@@ -170,13 +170,13 @@ mvn test -Dgroups=db      # integration tests — MySQL must be running
 mvn test -Dgroups=ui      # UI flows through the real controls — needs a display
 ```
 
-`mvn test` runs 40 unit tests in well under a second and opens no socket: the refund
+`mvn test` runs 42 unit tests in well under a second and opens no socket: the refund
 boundary at ±1 minute, the three seat multipliers, the booking state machine, the price
 snapshots, the contact rules, the 40-column receipt, the SQL console's read-only guard and
 the report registry's tab/preset parity. They pass with MySQL stopped, which is the only
 way they stay useful ([docs/PRD.md §14.1](docs/PRD.md#141-the-rule-that-keeps-tests-honest)).
 
-`mvn test -Dgroups=db` runs 51 integration tests and does need a running server:
+`mvn test -Dgroups=db` runs 54 integration tests and does need a running server:
 the config file, the `cinebook_app` login, the seeded 300 bookings, the
 `BigDecimal`/`LocalDate`/`LocalTime` mapping and the `serverTimezone` pin, the schedule
 and seat DAOs — row order, the 96-seat auditorium, and a cross-check that
@@ -212,7 +212,7 @@ screening, opens the film form on **New film**, closes it on **Cancel**, and tur
 taken slot into the screen-and-time refusal without adding a row, and that the Reports
 screen opens from the admin rail, switches to occupancy, loads a console preset, runs a
 read query, refuses a DELETE without leaving rows behind, and opens and closes the shift
-summary. Twenty-five tests, about twenty seconds, a display required.
+summary. Twenty-eight tests, about twenty seconds, a display required.
 
 ### Running the app
 
