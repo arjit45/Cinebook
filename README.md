@@ -458,6 +458,5 @@ and audit reconciliation:
 | `docs/OOP.md` | Class model, layering rules, and OOP concept coverage |
 | `docs/class-diagram-*.svg` | Architectural class diagrams (domain model and layer boundaries) |
 | `docs/DEMO.md` | Step-by-step interactive demonstration walkthrough and operational runbook |
-| `db/viva-queries.sql` | 21 self-contained verification queries for database inspections and constraint testing |
 | `tools/sqlcheck.py` | Offline proof that the queries and seed match the schema |
 
